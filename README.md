@@ -2,8 +2,8 @@
 
 This plugin helps people to find their assigned landingpad position in starports.
 
-![Screenshot](imgages/Default.png)
-![Screenshot](imgages/Dark.png)
+![Screenshot](images/Default.png)
+![Screenshot](images/Dark.png)
 
 ## Installation
 
