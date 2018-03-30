@@ -15,7 +15,7 @@ You will need to re-start EDMC for it to notice the new plugin.
 
 ## Acknowledgements
 
-[Habitable Zone plugin](https://github.com/Marginal/HabZone) used as template.
+[Habitable Zone plugin](https://github.com/Marginal/HabZone) from Jonathan Harris used as template.
 
 ## License
 
