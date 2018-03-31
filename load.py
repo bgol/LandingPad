@@ -26,20 +26,12 @@ def round_away(val):
 
 class LandingPads(tk.Canvas):
 
-    pad_map = {
-          1:  (0,0),  2:  (0,0), 3: (0,2), 4: (0,2),
-          5:  (1,0),  6:  (1,0), 7: (1,1), 8: (1,2),
-          9:  (2,0), 10:  (2,2),
-         11:  (3,0), 12:  (3,0), 13: (3,1), 14: (3,2), 15: (3,2),
-         16:  (4,0), 17:  (4,0), 18: (4,2), 19: (4,2),
-         20:  (5,0), 21:  (5,0), 22: (5,1), 23: (5,2),
-         24:  (6,0), 25:  (6,2),
-         26:  (7,0), 27:  (7,0), 28: (7,1), 29: (7,2), 30: (7,2),
-         31:  (8,0), 32:  (8,0), 33: (8,2), 34: (8,2),
-         35:  (9,0), 36:  (9,0), 37: (9,1), 38: (9,2),
-         39: (10,0), 40: (10,2),
-         41: (11,0), 42: (11,0), 43: (11,1), 44: (11,2), 45: (11,2),
-    }
+    pad_list = [
+        (0,0), (0,0), (0,2), (0,2),
+        (1,0), (1,0), (1,1), (1,2),
+        (2,0), (2,2),
+        (3,0), (3,0), (3,1), (3,2), (3,2),
+    ]
     shell_scale = (1, 0.70, 0.5, 0.25)
 
     def __init__(self, parent, cur_pad=None, col_stn="black", col_pad="blue", **kwargs):
@@ -149,6 +141,12 @@ class LandingPads(tk.Canvas):
         self.create_line(*[(centerX-dx, centerY+dy) for (dx, dy) in toaster],width=2*strong,fill="red",capstyle=tk.BUTT, joinstyle=tk.ROUND)
         self.stn_obj = True
 
+    def get_pad_coords(self, pad):
+        pad %= 45
+        s, t = self.pad_list[pad % 15]
+        s += int(pad / 15) * 4
+        return (s, t)
+
     def draw_pad(self, pad):
         if self.pad_obj:
             self.delete(self.pad_obj)
@@ -160,7 +158,7 @@ class LandingPads(tk.Canvas):
             if isinstance(pad, tuple):
                 s, t = pad
             else:
-                s, t = self.pad_map.get(pad, (0,0))
+                s, t = self.get_pad_coords(pad-1)
             dx, dy = self.pad_sectors[s]
             dot = self.radiusP * (self.shell_scale[0] - self.shell_scale[1]) / 4
             td = (self.shell_scale[t] + self.shell_scale[t+1]) / 2
