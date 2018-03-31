@@ -18,7 +18,7 @@ this.curr_show = None
 this.col_stn = "black"
 this.col_pad = "blue"
 this.hide_events = ('Docked', 'DockingCancelled', 'DockingTimeout', 'StartJump', 'Shutdown')
-this.show_types = ('bernal', 'coriolis', 'orbis')
+this.show_types = ('bernal', 'coriolis', 'orbis', 'asteroidbase')
 
 def round_away(val):
     val += -0.5 if val < 0 else 0.5
