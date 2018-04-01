@@ -9,7 +9,7 @@ import Tkinter as tk
 
 from config import config
 
-VERSION = '0.1'
+VERSION = '0.2'
 
 this = sys.modules[__name__]	# For holding module globals
 this.stn_frame = None
