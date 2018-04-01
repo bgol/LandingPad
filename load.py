@@ -32,7 +32,7 @@ class LandingPads(tk.Canvas):
         (2,0), (2,2),
         (3,0), (3,0), (3,1), (3,2), (3,2),
     ]
-    shell_scale = (1, 5/8, 5/11, 1/4)
+    shell_scale = (1, 0.625, 0.455, 0.25)
 
     def __init__(self, parent, cur_pad=None, col_stn="black", col_pad="blue", **kwargs):
         tk.Canvas.__init__(self, parent, **kwargs)
