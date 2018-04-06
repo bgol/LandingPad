@@ -275,3 +275,14 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         if entry['MusicTrack'] == "MainMenu":
             # only way I know, if the user logged out
             show_station(False)
+    elif entry["event"] == "SendText":
+        if entry["Message"].startswith("!pad"):
+            try:
+                pad = int(entry["Message"][4:])
+            except ValueError:
+                pad = None
+            if pad:
+                this.stn_canvas.config(cur_pad=pad)
+                show_station(True)
+            else:
+                show_station(False)
