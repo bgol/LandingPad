@@ -7,14 +7,20 @@ import sys
 import math
 import Tkinter as tk
 
+import myNotebook as nb
+from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
 VERSION = '0.2'
+
+PREFSNAME_BACKWARD = "landingpad_backward"
+OPTIONS_GREENSIDE = [_("right"), _("left")]
 
 this = sys.modules[__name__]	# For holding module globals
 this.stn_frame = None
 this.stn_canvas = None
 this.curr_show = None
+this.backward = False
 this.col_stn = "black"
 this.col_pad = "blue"
 this.hide_events = ('Docked', 'DockingCancelled', 'DockingTimeout', 'StartJump', 'Shutdown')
@@ -34,7 +40,10 @@ class LandingPads(tk.Canvas):
     ]
     shell_scale = (1, 0.625, 0.455, 0.25)
 
-    def __init__(self, parent, cur_pad=None, col_stn="black", col_pad="blue", **kwargs):
+    def __init__(
+        self, parent, cur_pad=None, backward=False,
+        col_stn="black", col_pad="blue", **kwargs
+    ):
         tk.Canvas.__init__(self, parent, **kwargs)
         self.bind("<Configure>", self.on_resize)
         self.width = self.winfo_reqwidth()
@@ -44,6 +53,7 @@ class LandingPads(tk.Canvas):
         self.col_stn = col_stn
         self.pad_obj = None
         self.stn_obj = False
+        self.backward = backward
         self.calc_values()
 
     def calc_values(self):
@@ -77,6 +87,7 @@ class LandingPads(tk.Canvas):
         self.col_stn = kwargs.pop("col_stn", self.col_stn)
         self.col_pad = kwargs.pop("col_pad", self.col_pad)
         self.cur_pad = kwargs.pop("cur_pad", self.cur_pad)
+        self.backward = kwargs.pop("backward", self.backward)
         tk.Canvas.config(self, **kwargs)
         self.draw_station()
         self.draw_pad(self.cur_pad)
@@ -137,8 +148,10 @@ class LandingPads(tk.Canvas):
             (+dx-dr,      +dy),
             (+0,          +dy),
         ]
-        self.create_line(*[(centerX+dx, centerY+dy) for (dx, dy) in toaster],width=2*strong,fill="green",capstyle=tk.BUTT, joinstyle=tk.ROUND)
-        self.create_line(*[(centerX-dx, centerY+dy) for (dx, dy) in toaster],width=2*strong,fill="red",capstyle=tk.BUTT, joinstyle=tk.ROUND)
+        green = "red" if self.backward else "green"
+        red = "green" if self.backward else "red"
+        self.create_line(*[(centerX+dx, centerY+dy) for (dx, dy) in toaster],width=2*strong,fill=green,capstyle=tk.BUTT, joinstyle=tk.ROUND)
+        self.create_line(*[(centerX-dx, centerY+dy) for (dx, dy) in toaster],width=2*strong,fill=red,capstyle=tk.BUTT, joinstyle=tk.ROUND)
         self.stn_obj = True
 
     def get_pad_coords(self, pad):
@@ -159,6 +172,8 @@ class LandingPads(tk.Canvas):
                 s, t = pad
             else:
                 s, t = self.get_pad_coords(pad-1)
+                if self.backward:
+                    s = (s+6) % 12
             dx, dy = self.pad_sectors[s]
             dot = self.radiusP * (self.shell_scale[0] - self.shell_scale[1]) / 4
             td = (self.shell_scale[t] + self.shell_scale[t+1]) / 2
@@ -193,6 +208,10 @@ def plugin_app(parent):
     this.col_stn = config.get('dark_highlight') if theme else "black"
     this.col_pad = "yellow" if theme else "blue"
 
+    # which side is green
+    this.backward = config.getint(PREFSNAME_BACKWARD)
+    this.greenside = tk.StringVar(value=OPTIONS_GREENSIDE[this.backward])
+
     frame = tk.Frame(parent)           # outer frame
     this.stn_frame = tk.Frame(frame)   # station frame
     this.dummy = tk.Frame(frame)       # dummy frame for resize
@@ -200,7 +219,7 @@ def plugin_app(parent):
     # station canvas
     this.stn_canvas = LandingPads(
         this.stn_frame, highlightthickness=0,
-        col_stn=this.col_stn, col_pad=this.col_pad,
+        col_stn=this.col_stn, col_pad=this.col_pad, backward=this.backward,
     )
     this.stn_canvas.grid()
 
@@ -212,14 +231,35 @@ def plugin_app(parent):
 
     return frame
 
+def plugin_prefs(parent, cmdr, is_beta):
+    # EDMC defaults
+    PADX, PADY = 10, 2
+
+    frame = nb.Frame(parent)
+    frame.columnconfigure(1, weight=1)
+
+    HyperlinkLabel(frame, text='LandingPad', background=nb.Label().cget('background'), url='https://github.com/bgol/LandingPad', underline=True).grid(row=1, columnspan=2, padx=PADX, sticky=tk.W)
+    nb.Label(frame, text = 'Version %s' % VERSION).grid(row=1, column=2, padx=PADX, sticky=tk.E)
+
+    nb.Label(frame, text=_('Greenside')).grid(row=10, padx=PADX, pady=2*PADY, sticky=tk.W)
+    nb.OptionMenu(frame, this.greenside, this.greenside.get(), *OPTIONS_GREENSIDE).grid(row=10, column=1, columnspan=2, sticky=tk.W)
+
+    return frame
+
 def prefs_changed(cmdr, is_beta):
     # adapt to theme
     theme = config.getint('theme')
     this.col_stn = config.get('dark_highlight') if theme else "black"
     this.col_pad = "yellow" if theme else "blue"
 
+    if this.greenside.get() == OPTIONS_GREENSIDE[1]:
+        this.backward = True
+    else:
+        this.backward = False
+    config.set(PREFSNAME_BACKWARD, this.backward)
+
     # update station
-    this.stn_canvas.config(col_stn=this.col_stn, col_pad=this.col_pad)
+    this.stn_canvas.config(col_stn=this.col_stn, col_pad=this.col_pad, backward=this.backward)
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     if entry['event'] == 'DockingGranted':
