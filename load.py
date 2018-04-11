@@ -6,6 +6,7 @@
 import sys
 import math
 import json
+import time
 import socket
 import Tkinter as tk
 import ttk
@@ -85,6 +86,7 @@ class Overlay(object):
             try:
                 self.conn.send(json.dumps(msg))
                 self.conn.send("\n")
+                time.sleep(0.1)
             except Exception as err:
                 print "LandingPad: error in Overlay.send_raw: {}".format(err)
                 self.conn = None
