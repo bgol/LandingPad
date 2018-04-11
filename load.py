@@ -67,8 +67,12 @@ class Overlay(object):
         :return:
         """
         if self.conn is None:
-            self.conn = socket.socket()
-            self.conn.connect((self.server, self.port))
+            try:
+                self.conn = socket.socket()
+                self.conn.connect((self.server, self.port))
+            except Exception as err:
+                print "LandingPad: error in Overlay.connect: {}".format(err)
+                self.conn = None
 
     def send_raw(self, msg):
         """
