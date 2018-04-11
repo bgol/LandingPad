@@ -41,6 +41,7 @@ this.over_aspect_x = 1
 this.over_color_stn = "#ffffff"
 this.over_color_pad = "yellow"
 this.over_ttl = 10*60
+this.id_list = []
 
 PREFSNAME_STN_OVERLAY = "landingpad_stn_overlay"
 PREFSNAME_COL_OVERLAY = "landingpad_col_overlay"
@@ -444,6 +445,7 @@ def draw_overlay_station():
             "ttl": this.over_ttl,
             "vector": vectorShell
         }
+        this.id_list.append(msg["id"])
         this.overlay.send_raw(msg)
 
     # draw sector lines
@@ -466,6 +468,7 @@ def draw_overlay_station():
                 },
             ]
         }
+        this.id_list.append(msg["id"])
         this.overlay.send_raw(msg)
 
 def draw_overlay_toaster():
@@ -489,6 +492,7 @@ def draw_overlay_toaster():
             "ttl": this.over_ttl,
             "vector": vector
         }
+        this.id_list.append(msg["id"])
         this.overlay.send_raw(msg)
 
 def draw_overlay_pad(pad):
@@ -524,20 +528,16 @@ def draw_overlay_pad(pad):
             "ttl": this.over_ttl,
             "vector": vectorPad
         }
+        this.id_list.append(msg["id"])
         this.overlay.send_raw(msg)
 
 def hide_overlay():
-    if this.overlay:
-        idList = ["toaster-right", "toaster-left", "pad"]
-        for p in range(len(this.stn_canvas.shell_scale)):
-            idList.append("shell-%d" % p)
-        for l in range(len(this.stn_canvas.dodecagon)):
-            idList.append("line-%d" % l)
-        for id in idList:
-            this.overlay.send_raw({
-                "id": id,
-                "ttl": 0,
-            })
+    for gfxID in reversed(this.id_list):
+        this.overlay.send_raw({
+            "id": gfxID,
+            "ttl": 0,
+        })
+    del this.id_list[:]
 
 def show_overlay():
     if this.overlay is None:
