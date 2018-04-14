@@ -15,7 +15,7 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '0.4'
+VERSION = '0.4.1'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 OPTIONS_GREENSIDE = [_("right"), _("left")]
@@ -33,6 +33,10 @@ this.show_types = ('bernal', 'coriolis', 'orbis', 'asteroidbase')
 # EDMC Overlay settings
 SERVER_ADDRESS = "127.0.0.1"
 SERVER_PORT = 5010
+VIRTUAL_WIDTH = 1280.0
+VIRTUAL_HEIGHT = 1024.0
+VIRTUAL_ORIGIN_X = 20.0
+VIRTUAL_ORIGIN_Y = 40.0
 this.overlay = None
 this.use_overlay = False
 this.over_radius = 100
@@ -52,6 +56,9 @@ PREFSNAME_USE_OVERLAY = "landingpad_use_overlay"
 def round_away(val):
     val += -0.5 if val < 0 else 0.5
     return int(val)
+
+def calc_aspect_x(sw, sh):
+    return (VIRTUAL_WIDTH+32) / (VIRTUAL_HEIGHT+18) * (sh-2*VIRTUAL_ORIGIN_Y) / (sw-2*VIRTUAL_ORIGIN_X)
 
 class Overlay(object):
     """
@@ -291,7 +298,7 @@ def get_overlay_prefs(parent):
     else:
         sw = float(parent.winfo_screenwidth())
         sh = float(parent.winfo_screenheight())
-    this.over_aspect_x = 1350.0 / 1060.0 * sh / sw
+    this.over_aspect_x = calc_aspect_x(sw, sh)
 
     this.prefs_radius = tk.IntVar(value=this.over_radius)
     this.prefs_center_x = tk.IntVar(value=this.over_center_x)
@@ -408,7 +415,7 @@ def prefs_changed(cmdr, is_beta):
     sh = this.prefs_screen_h.get()
     scr_prefs = "%dx%d" % (sw, sh)
     config.set(PREFSNAME_SCR_OVERLAY, scr_prefs)
-    this.over_aspect_x = 1350.0 / 1060.0 * float(sh) / float(sw)
+    this.over_aspect_x = calc_aspect_x(float(sw), float(sh))
 
     # update station
     this.stn_canvas.config(col_stn=this.col_stn, col_pad=this.col_pad, backward=this.backward)
