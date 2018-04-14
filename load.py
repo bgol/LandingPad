@@ -15,7 +15,7 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '0.4.1'
+VERSION = '0.4.2'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 OPTIONS_GREENSIDE = [_("right"), _("left")]
@@ -43,6 +43,7 @@ this.over_radius = 100
 this.over_center_x = 100
 this.over_center_y = 490
 this.over_aspect_x = 1
+this.over_ms_delay = 100
 this.over_color_stn = "#ffffff"
 this.over_color_pad = "yellow"
 this.over_ttl = 10*60
@@ -52,6 +53,7 @@ PREFSNAME_STN_OVERLAY = "landingpad_stn_overlay"
 PREFSNAME_COL_OVERLAY = "landingpad_col_overlay"
 PREFSNAME_SCR_OVERLAY = "landingpad_scr_overlay"
 PREFSNAME_USE_OVERLAY = "landingpad_use_overlay"
+PREFSNAME_MS_DELAY = "landingpad_ms_delay"
 
 def round_away(val):
     val += -0.5 if val < 0 else 0.5
@@ -83,7 +85,7 @@ class Overlay(object):
                 print "LandingPad: error in Overlay.connect: {}".format(err)
                 self.conn = None
 
-    def send_raw(self, msg):
+    def send_raw(self, msg, delay=100):
         """
         Encode a dict and send it to the server
         :param msg:
@@ -93,7 +95,9 @@ class Overlay(object):
             try:
                 self.conn.send(json.dumps(msg))
                 self.conn.send("\n")
-                time.sleep(0.1)
+                if delay:
+                    delay = min(max(delay, 0), 500)
+                    time.sleep(float(delay) / 1000.0)
             except Exception as err:
                 print "LandingPad: error in Overlay.send_raw: {}".format(err)
                 self.conn = None
@@ -276,6 +280,8 @@ def show_station(show):
 def get_overlay_prefs(parent):
 
     this.use_overlay = config.getint(PREFSNAME_USE_OVERLAY)
+    if config.get(PREFSNAME_MS_DELAY) is not None:
+        this.over_ms_delay = int(config.get(PREFSNAME_MS_DELAY))
 
     split_me = config.get(PREFSNAME_STN_OVERLAY)
     if split_me:
@@ -306,6 +312,7 @@ def get_overlay_prefs(parent):
     this.prefs_screen_w = tk.IntVar(value=int(sw))
     this.prefs_screen_h = tk.IntVar(value=int(sh))
     this.prefs_use_over = tk.IntVar(value=this.use_overlay)
+    this.prefs_ms_delay = tk.IntVar(value=this.over_ms_delay)
 
 def try_overlay():
     # test for EDMC Overlay
@@ -388,6 +395,10 @@ def plugin_prefs(parent, cmdr, is_beta):
     nb.Label(frame, text=_('Height')).grid(row=24, column=1, padx=PADX, sticky=tk.E)
     nb.Entry(frame, textvariable=this.prefs_screen_h).grid(row=24, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
 
+    nb.Label(frame, text=_('Drawing delay')).grid(row=31, padx=2*PADX, sticky=tk.W)
+    nb.Label(frame, text=_('msec')).grid(row=31, column=1, padx=PADX, sticky=tk.E)
+    nb.Entry(frame, textvariable=this.prefs_ms_delay).grid(row=31, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
+
     return frame
 
 def prefs_changed(cmdr, is_beta):
@@ -416,6 +427,9 @@ def prefs_changed(cmdr, is_beta):
     scr_prefs = "%dx%d" % (sw, sh)
     config.set(PREFSNAME_SCR_OVERLAY, scr_prefs)
     this.over_aspect_x = calc_aspect_x(float(sw), float(sh))
+
+    this.over_ms_delay = this.prefs_ms_delay.get()
+    config.set(PREFSNAME_MS_DELAY, str(this.over_ms_delay))
 
     # update station
     this.stn_canvas.config(col_stn=this.col_stn, col_pad=this.col_pad, backward=this.backward)
@@ -455,7 +469,7 @@ def draw_overlay_station():
             "vector": vectorShell
         }
         this.id_list.append(msg["id"])
-        this.overlay.send_raw(msg)
+        this.overlay.send_raw(msg, delay=this.over_ms_delay)
 
     # draw sector lines
     vectorFrom = this.stn_canvas.get_poly_points(centerX, centerY, radiusP * this.stn_canvas.shell_scale[0])
@@ -478,7 +492,7 @@ def draw_overlay_station():
             ]
         }
         this.id_list.append(msg["id"])
-        this.overlay.send_raw(msg)
+        this.overlay.send_raw(msg, delay=this.over_ms_delay)
 
 def draw_overlay_toaster():
     centerX = this.over_center_x
@@ -502,7 +516,7 @@ def draw_overlay_toaster():
             "vector": vector
         }
         this.id_list.append(msg["id"])
-        this.overlay.send_raw(msg)
+        this.overlay.send_raw(msg, delay=this.over_ms_delay)
 
 def draw_overlay_pad(pad):
     if this.curr_show and pad:
@@ -538,14 +552,11 @@ def draw_overlay_pad(pad):
             "vector": vectorPad
         }
         this.id_list.append(msg["id"])
-        this.overlay.send_raw(msg)
+        this.overlay.send_raw(msg, delay=this.over_ms_delay)
 
 def hide_overlay():
     for gfxID in reversed(this.id_list):
-        this.overlay.send_raw({
-            "id": gfxID,
-            "ttl": 0,
-        })
+        this.overlay.send_raw({"id": gfxID, "ttl": 0}, delay=this.over_ms_delay)
     del this.id_list[:]
 
 def show_overlay():
