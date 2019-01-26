@@ -15,7 +15,7 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '0.5'
+VERSION = '0.6'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 OPTIONS_GREENSIDE = [_("right"), _("left")]
@@ -28,7 +28,7 @@ this.backward = False
 this.col_stn = "black"
 this.col_pad = "blue"
 this.hide_events = ('Docked', 'DockingCancelled', 'DockingTimeout', 'StartJump', 'Shutdown')
-this.show_types = ('bernal', 'coriolis', 'orbis', 'asteroidbase')
+this.show_types = ('bernal', 'coriolis', 'orbis', 'asteroidbase', 'ocellus')
 
 # EDMC Overlay settings
 SERVER_ADDRESS = "127.0.0.1"
