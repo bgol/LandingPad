@@ -23,7 +23,7 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.0'
+VERSION = '1.1'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 OPTIONS_GREENSIDE = [_("right"), _("left")]
