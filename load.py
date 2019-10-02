@@ -3,13 +3,21 @@
 # Display the "LandigPad" position for Starports.
 #
 
+from __future__ import print_function
+
 import sys
 import math
 import json
 import time
 import socket
-import Tkinter as tk
-import ttk
+try:
+    # Python 2
+    import Tkinter as tk
+    import ttk
+except ModuleNotFoundError:
+    # Python 3
+    import tkinter as tk
+    from tkinter import ttk
 
 import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
@@ -82,7 +90,7 @@ class Overlay(object):
                 self.conn = socket.socket()
                 self.conn.connect((self.server, self.port))
             except Exception as err:
-                print "LandingPad: error in Overlay.connect: {}".format(err)
+                print("LandingPad: error in Overlay.connect: {}".format(err))
                 self.conn = None
 
     def send_raw(self, msg, delay=100):
@@ -99,7 +107,7 @@ class Overlay(object):
                     delay = min(max(delay, 0), 500)
                     time.sleep(float(delay) / 1000.0)
             except Exception as err:
-                print "LandingPad: error in Overlay.send_raw: {}".format(err)
+                print("LandingPad: error in Overlay.send_raw: {}".format(err))
                 self.conn = None
 
 class LandingPads(tk.Canvas):
@@ -323,7 +331,10 @@ def try_overlay():
         except:
             this.overlay = None
         if not this.overlay:
-            print "LandingPad: overlay not available"
+            print("LandingPad: overlay not available")
+
+def plugin_start3(plugin_dir):
+    return plugin_start()
 
 def plugin_start():
     # nothing to do
