@@ -23,7 +23,7 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.1'
+VERSION = '1.2'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 OPTIONS_GREENSIDE = [_("right"), _("left")]
@@ -101,8 +101,8 @@ class Overlay(object):
         """
         if self.conn:
             try:
-                self.conn.send(json.dumps(msg))
-                self.conn.send("\n")
+                self.conn.send(json.dumps(msg).encode())
+                self.conn.send(b"\n")
                 if delay:
                     delay = min(max(delay, 0), 500)
                     time.sleep(float(delay) / 1000.0)
