@@ -23,16 +23,19 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.2'
+VERSION = '1.3'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
+PREFSNAME_MAX_WIDTH = "landingpad_max_width"
 OPTIONS_GREENSIDE = [_("right"), _("left")]
+MAX_WIDTH_MINIMUM = 150
 
 this = sys.modules[__name__]	# For holding module globals
 this.stn_frame = None
 this.stn_canvas = None
 this.curr_show = None
 this.backward = False
+this.max_width = 0
 this.col_stn = "black"
 this.col_pad = "blue"
 this.hide_events = ('Docked', 'DockingCancelled', 'DockingTimeout', 'StartJump', 'Shutdown')
@@ -127,7 +130,9 @@ class LandingPads(tk.Canvas):
         tk.Canvas.__init__(self, parent, **kwargs)
         self.bind("<Configure>", self.on_resize)
         self.width = self.winfo_reqwidth()
-        self.height = self.winfo_reqheight()
+        if this.max_width:
+            self.width = min(self.width, this.max_width)
+        self.height = self.width
         self.cur_pad = cur_pad
         self.col_pad = col_pad
         self.col_stn = col_stn
@@ -168,6 +173,9 @@ class LandingPads(tk.Canvas):
         self.col_pad = kwargs.pop("col_pad", self.col_pad)
         self.cur_pad = kwargs.pop("cur_pad", self.cur_pad)
         self.backward = kwargs.pop("backward", self.backward)
+        if this.max_width and "width" in kwargs:
+            kwargs["width"] = min(kwargs["width"], this.max_width)
+            kwargs["height"] = kwargs["width"]
         tk.Canvas.config(self, **kwargs)
         self.draw_station()
         self.draw_pad(self.cur_pad)
@@ -350,6 +358,12 @@ def plugin_app(parent):
     this.backward = config.getint(PREFSNAME_BACKWARD)
     this.greenside = tk.StringVar(value=OPTIONS_GREENSIDE[this.backward])
 
+    # maximum plugin width for EDMC window
+    this.max_width = config.getint(PREFSNAME_MAX_WIDTH)
+    if this.max_width != 0:
+        this.max_width = max(this.max_width, MAX_WIDTH_MINIMUM)
+    this.prefs_max_width = tk.IntVar(value=this.max_width)
+
     frame = tk.Frame(parent)           # outer frame
     this.stn_frame = tk.Frame(frame)   # station frame
     this.dummy = tk.Frame(frame)       # dummy frame for resize
@@ -384,6 +398,9 @@ def plugin_prefs(parent, cmdr, is_beta):
 
     nb.Label(frame, text=_('Greenside')).grid(row=10, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
     nb.OptionMenu(frame, this.greenside, this.greenside.get(), *OPTIONS_GREENSIDE).grid(row=10, column=1, columnspan=2, padx=PADX, sticky=tk.W)
+
+    nb.Label(frame, text=_('max. Width')).grid(row=11, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
+    nb.Entry(frame, textvariable=this.prefs_max_width).grid(row=11, column=1, columnspan=2, padx=PADX, pady=PADY, sticky=tk.W)
 
     nb.Label(frame).grid(sticky=tk.W)
     nb.Label(frame, text=_('Overlay')).grid(row=15, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
@@ -424,6 +441,15 @@ def prefs_changed(cmdr, is_beta):
         this.backward = False
     config.set(PREFSNAME_BACKWARD, this.backward)
 
+    this.max_width = this.prefs_max_width.get()
+    if this.max_width != 0:
+        if this.max_width < 0:
+            this.max_width = this.stn_frame.master.winfo_width()
+        else:
+            this.max_width = max(this.max_width, MAX_WIDTH_MINIMUM)
+        this.prefs_max_width.set(this.max_width)
+    config.set(PREFSNAME_MAX_WIDTH, this.max_width)
+
     this.use_overlay = this.prefs_use_over.get()
     config.set(PREFSNAME_USE_OVERLAY, this.use_overlay)
 
@@ -443,7 +469,10 @@ def prefs_changed(cmdr, is_beta):
     config.set(PREFSNAME_MS_DELAY, str(this.over_ms_delay))
 
     # update station
-    this.stn_canvas.config(col_stn=this.col_stn, col_pad=this.col_pad, backward=this.backward)
+    width = this.stn_frame.master.winfo_width()
+    if this.max_width:
+        width = min(width, this.max_width)
+    this.stn_canvas.config(col_stn=this.col_stn, col_pad=this.col_pad, backward=this.backward, width=width)
     if this.curr_show:
         hide_overlay()
         if this.use_overlay:
