@@ -13,6 +13,24 @@ This plugin helps people to find their assigned landingpad position in starports
 
 You will need to re-start EDMC for it to notice the new plugin.
 
+## Settings
+
+![Screenshot](images/Settings.png)
+
+* Greenside: which side are the green navigation lights
+  - right (Default)
+  - left
+* max. Width: maximum width of the station inside the EDMC window
+  - 0 (Default, no limitation)
+  - -1 (current window width, will be replaced with the actual value after closing the settings)
+  - otherwise the minimum value is 150
+* Overlay
+  - Use overlay if available: if the EDMCOverlay plugin is installed use it (Default: off)
+  - Station Radius: the radius of the overlay station (Default: 100)
+  - Center coordinates X/Y: the center position of the overlay station (Default: 100/490)
+  - Screen Width/Height: the gamescreen resolution to keep the right aspect ratio (Default: screen of EDMC)
+  - Drawing delay: delay between each drawing step in milliseconds (allowed range: 0 .. 500, Default: 100)
+
 ## Acknowledgements
 
 [Habitable Zone plugin](https://github.com/Marginal/HabZone) from Jonathan Harris used as template.
