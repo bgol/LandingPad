@@ -23,7 +23,7 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.3.1'
+VERSION = '1.3.2'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 PREFSNAME_MAX_WIDTH = "landingpad_max_width"
@@ -65,6 +65,9 @@ PREFSNAME_COL_OVERLAY = "landingpad_col_overlay"
 PREFSNAME_SCR_OVERLAY = "landingpad_scr_overlay"
 PREFSNAME_USE_OVERLAY = "landingpad_use_overlay"
 PREFSNAME_MS_DELAY = "landingpad_ms_delay"
+
+CONFIG_GETSTR = getattr(config, "get_str", getattr(config, "get", str))
+CONFIG_GETINT = getattr(config, "get_int", getattr(config, "getint", int))
 
 def round_away(val):
     val += -0.5 if val < 0 else 0.5
@@ -293,24 +296,24 @@ def show_station(show):
 
 def get_overlay_prefs(parent):
 
-    this.use_overlay = config.getint(PREFSNAME_USE_OVERLAY)
-    if config.get(PREFSNAME_MS_DELAY) is not None:
-        this.over_ms_delay = int(config.get(PREFSNAME_MS_DELAY))
+    this.use_overlay = CONFIG_GETINT(PREFSNAME_USE_OVERLAY)
+    if CONFIG_GETSTR(PREFSNAME_MS_DELAY) is not None:
+        this.over_ms_delay = int(CONFIG_GETSTR(PREFSNAME_MS_DELAY))
 
-    split_me = config.get(PREFSNAME_STN_OVERLAY)
+    split_me = CONFIG_GETSTR(PREFSNAME_STN_OVERLAY)
     if split_me:
         vals = split_me.split(":")
         this.over_center_x = int(vals[0])
         this.over_center_y = int(vals[1])
         this.over_radius = int(vals[2])
 
-    split_me = config.get(PREFSNAME_COL_OVERLAY)
+    split_me = CONFIG_GETSTR(PREFSNAME_COL_OVERLAY)
     if split_me:
         vals = split_me.split(":")
         this.over_color_stn = vals[0]
         this.over_color_pad = vals[1]
 
-    split_me = config.get(PREFSNAME_SCR_OVERLAY)
+    split_me = CONFIG_GETSTR(PREFSNAME_SCR_OVERLAY)
     if split_me:
         vals = split_me.split("x")
         sw = float(vals[0])
@@ -348,16 +351,16 @@ def plugin_start():
 
 def plugin_app(parent):
     # adapt to theme
-    theme = config.getint('theme')
-    this.col_stn = config.get('dark_highlight') if theme else "black"
+    theme = CONFIG_GETINT('theme')
+    this.col_stn = CONFIG_GETSTR('dark_highlight') if theme else "black"
     this.col_pad = "yellow" if theme else "blue"
 
     # which side is green
-    this.backward = config.getint(PREFSNAME_BACKWARD)
+    this.backward = CONFIG_GETINT(PREFSNAME_BACKWARD)
     this.greenside = tk.StringVar(value=OPTIONS_GREENSIDE[this.backward])
 
     # maximum plugin width for EDMC window
-    this.max_width = config.getint(PREFSNAME_MAX_WIDTH)
+    this.max_width = CONFIG_GETINT(PREFSNAME_MAX_WIDTH)
     if this.max_width != 0:
         this.max_width = max(this.max_width, MAX_WIDTH_MINIMUM)
     this.prefs_max_width = tk.IntVar(value=this.max_width)
@@ -429,8 +432,8 @@ def plugin_prefs(parent, cmdr, is_beta):
 
 def prefs_changed(cmdr, is_beta):
     # adapt to theme
-    theme = config.getint('theme')
-    this.col_stn = config.get('dark_highlight') if theme else "black"
+    theme = CONFIG_GETINT('theme')
+    this.col_stn = CONFIG_GETSTR('dark_highlight') if theme else "black"
     this.col_pad = "yellow" if theme else "blue"
 
     if this.greenside.get() == OPTIONS_GREENSIDE[1]:
