@@ -23,7 +23,7 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.3'
+VERSION = '1.3.1'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 PREFSNAME_MAX_WIDTH = "landingpad_max_width"
@@ -225,8 +225,8 @@ class LandingPads(tk.Canvas):
         strong = 4 - (radiusP < 250) - (radiusP < 150) - (radiusP < 50)
         shellList = []
         lenScale = len(self.shell_scale)
-        for p in range(lenScale):
-            r = radiusP * self.shell_scale[p]
+        for p, scale in enumerate(self.shell_scale):
+            r = radiusP * scale
             polyPoints = self.get_poly_points(centerX, centerY, r)
             if 0 < p < lenScale-1:
                 lw = max(1, strong-1)
@@ -235,9 +235,7 @@ class LandingPads(tk.Canvas):
             self.create_polygon(*polyPoints, width=lw, outline=self.col_stn, fill='', joinstyle=tk.ROUND)
             shellList.append(polyPoints)
 
-        for i in range(len(self.dodecagon)):
-            x1, y1 = shellList[0][i]
-            x2, y2 = shellList[-1][i]
+        for (x1, y1), (x2, y2) in zip(shellList[0], shellList[-1]):
             self.create_line(x1, y1, x2, y2, width=strong, fill=self.col_stn, capstyle=tk.ROUND)
 
         toaster = self.get_toaster(radiusP)
@@ -488,19 +486,15 @@ def draw_overlay_station():
     centerY = this.over_center_y
     radiusP = this.over_radius
     # draw dodecagons
-    for p in range(len(this.stn_canvas.shell_scale)):
+    for p, scale in enumerate(this.stn_canvas.shell_scale):
         vectorShell = []
-        r = radiusP * this.stn_canvas.shell_scale[p]
+        r = radiusP * scale
         polyPoints = this.stn_canvas.get_poly_points(centerX, centerY, r)
-        for (x, y) in polyPoints:
+        for (x, y) in polyPoints + [polyPoints[0]]:
             vectorShell.append({
                 "x": aspect(x),
                 "y": y,
             })
-        vectorShell.append({
-            "x": aspect(polyPoints[0][0]),
-            "y": polyPoints[0][1],
-        })
         msg = {
             "id": "shell-%d" % p,
             "color": this.over_color_stn,
@@ -514,7 +508,7 @@ def draw_overlay_station():
     # draw sector lines
     vectorFrom = this.stn_canvas.get_poly_points(centerX, centerY, radiusP * this.stn_canvas.shell_scale[0])
     vectorTo = this.stn_canvas.get_poly_points(centerX, centerY, radiusP * this.stn_canvas.shell_scale[-1])
-    for l in range(len(vectorFrom)):
+    for l, ((x1, y1), (x2, y2)) in enumerate(zip(vectorFrom, vectorTo)):
         msg = {
             "id": "line-%d" % l,
             "color": this.over_color_stn,
@@ -522,12 +516,12 @@ def draw_overlay_station():
             "ttl": this.over_ttl,
             "vector": [
                 {
-                    "x": aspect(vectorFrom[l][0]),
-                    "y": vectorFrom[l][1],
+                    "x": aspect(x1),
+                    "y": y1,
                 },
                 {
-                    "x": aspect(vectorTo[l][0]),
-                    "y": vectorTo[l][1],
+                    "x": aspect(x2),
+                    "y": y2,
                 },
             ]
         }
@@ -575,15 +569,11 @@ def draw_overlay_pad(pad):
         vectorPad = []
         for proz in [0.25, 0.5, 0.75]:
             polyPoints = this.stn_canvas.get_poly_points(rx, ry, rd * proz)
-            for (x, y) in polyPoints:
+            for (x, y) in polyPoints + [polyPoints[0]]:
                 vectorPad.append({
                     "x": aspect(x),
                     "y": y,
                 })
-            vectorPad.append({
-                "x": aspect(polyPoints[0][0]),
-                "y": polyPoints[0][1],
-            })
         msg = {
             "id": "pad",
             "shape": "vect",
