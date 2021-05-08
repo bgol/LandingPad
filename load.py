@@ -23,14 +23,18 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.3.2'
+VERSION = '1.3.3'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 PREFSNAME_MAX_WIDTH = "landingpad_max_width"
 OPTIONS_GREENSIDE = [_("right"), _("left")]
 MAX_WIDTH_MINIMUM = 150
 
-this = sys.modules[__name__]	# For holding module globals
+class ModuleGlobals():
+    """For holding module globals"""
+    pass
+
+this = ModuleGlobals()
 this.stn_frame = None
 this.stn_canvas = None
 this.curr_show = None
