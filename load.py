@@ -23,7 +23,7 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.3.4'
+VERSION = '1.3.5'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 PREFSNAME_MAX_WIDTH = "landingpad_max_width"
@@ -196,12 +196,13 @@ class LandingPads(tk.Canvas):
         self.config(width=self.width, height=self.height)
 
     def get_poly_points(self, cx, cy, r):
-        polyPoints = []
-        for (dx, dy) in self.dodecagon:
-            x = cx + round_away(dx*r)
-            y = cy + round_away(dy*r)
-            polyPoints.append((x, y))
-        return polyPoints
+        return [
+            (
+                cx + round_away(dx*r),
+                cy + round_away(dy*r),
+            )
+            for (dx, dy) in self.dodecagon
+        ]
 
     def get_toaster(self, r):
         dx = round_away(r * 0.75)
@@ -497,14 +498,15 @@ def draw_overlay_station():
     radiusP = this.over_radius
     # draw dodecagons
     for p, scale in enumerate(this.stn_canvas.shell_scale):
-        vectorShell = []
         r = radiusP * scale
         polyPoints = this.stn_canvas.get_poly_points(centerX, centerY, r)
-        for (x, y) in polyPoints + [polyPoints[0]]:
-            vectorShell.append({
+        vectorShell = [
+            {
                 "x": aspect(x),
                 "y": y,
-            })
+            }
+            for (x, y) in polyPoints + [polyPoints[0]]
+        ]
         msg = {
             "id": "shell-%d" % p,
             "color": this.over_color_stn,
@@ -579,11 +581,13 @@ def draw_overlay_pad(pad):
         vectorPad = []
         for proz in [0.25, 0.5, 0.75]:
             polyPoints = this.stn_canvas.get_poly_points(rx, ry, rd * proz)
-            for (x, y) in polyPoints + [polyPoints[0]]:
-                vectorPad.append({
+            vectorPad += [
+                {
                     "x": aspect(x),
                     "y": y,
-                })
+                }
+                for (x, y) in polyPoints + [polyPoints[0]]
+            ]
         msg = {
             "id": "pad",
             "shape": "vect",
