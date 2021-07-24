@@ -23,7 +23,7 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.3.5'
+VERSION = '1.4'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 PREFSNAME_MAX_WIDTH = "landingpad_max_width"
