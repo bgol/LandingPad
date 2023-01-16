@@ -23,7 +23,7 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.5.1'
+VERSION = '1.5.2'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 PREFSNAME_MAX_WIDTH = "landingpad_max_width"
@@ -590,30 +590,26 @@ def draw_overlay_pad(pad):
         if this.backward:
             s = (s+6) % 12
         dx, dy = this.stn_canvas.pad_sectors[s]
-        rd = radiusP * 0.08
         rt = radiusP * (this.stn_canvas.shell_scale[t] + this.stn_canvas.shell_scale[t+1]) / 2
         rt = rt * this.stn_canvas.cos15
         rx = centerX + round_away(rt*dx)
         ry = centerY + round_away(rt*dy)
-        vectorPad = []
-        for proz in [0.25, 0.5, 0.75]:
-            polyPoints = this.stn_canvas.get_poly_points(rx, ry, rd * proz)
-            vectorPad += [
-                {
-                    "x": aspect(x),
-                    "y": y,
-                }
-                for (x, y) in polyPoints + [polyPoints[0]]
-            ]
-        msg = {
-            "id": "pad",
-            "shape": "vect",
-            "color": this.over_color_pad,
-            "ttl": this.over_ttl,
-            "vector": vectorPad
-        }
-        this.id_list.append(msg["id"])
-        this.overlay.send_raw(msg, delay=this.over_ms_delay)
+        for i, (px, py) in enumerate([(3, 9), (7, 7), (9, 3)]):
+            x = rx - px // 2
+            y = ry - py // 2
+            msg = {
+                "id": f"pad-{pad}-{i}",
+                "shape": "rect",
+                "color": this.over_color_pad,
+                "fill": this.over_color_pad,
+                "ttl": this.over_ttl,
+                "x": aspect(x),
+                "y": y,
+                "w": aspect(px),
+                "h": py,
+            }
+            this.id_list.append(msg["id"])
+            this.overlay.send_raw(msg, delay=this.over_ms_delay)
 
 def hide_overlay():
     for gfxID in reversed(this.id_list):
