@@ -23,7 +23,7 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.5.0'
+VERSION = '1.5.1'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 PREFSNAME_MAX_WIDTH = "landingpad_max_width"
@@ -206,21 +206,21 @@ class LandingPads(tk.Canvas):
             for (dx, dy) in self.dodecagon
         ]
 
-    def get_toaster(self, r):
+    def get_toaster(self, r, s=0):
         dx = round_away(r * 0.75)
         dy = round_away(r * self.shell_scale[-1])
         dr = round_away(dy * 0.08)
         toaster = [
-            (+0,     -dy),
-            (+dx-dr, -dy),
-            (+dx+dr, -dy+2*dr),
-            (+r-dr,  -dy+2*dr),
-            (+r,     -dy+3*dr),
-            (+r,     +dy-3*dr),
-            (+r-dr,  +dy-2*dr),
-            (+dx+dr, +dy-2*dr),
-            (+dx-dr, +dy),
-            (+0,     +dy),
+            (+0,     -dy-s),
+            (+dx-dr, -dy-s),
+            (+dx+dr, -dy+2*dr-s),
+            (+r-dr,  -dy+2*dr-s),
+            (+r-s,   -dy+3*dr-s),
+            (+r-s,   +dy-3*dr+s),
+            (+r-dr,  +dy-2*dr+s),
+            (+dx+dr, +dy-2*dr+s),
+            (+dx-dr, +dy+s),
+            (+0,     +dy+s),
         ]
         return toaster
 
@@ -561,24 +561,25 @@ def draw_overlay_toaster():
     centerY = this.over_center_y
     radiusP = this.over_radius
     # draw toaster
-    toaster = this.stn_canvas.get_toaster(radiusP)
-    vectorRight = [{"x": aspect(centerX+dx), "y": centerY+dy} for (dx, dy) in toaster]
-    vectorLeft = [{"x": aspect(centerX-dx), "y": centerY+dy} for (dx, dy) in toaster]
-    colorRight = "red" if this.backward else "green"
-    colorLeft = "green" if this.backward else "red"
-    for (id, color, vector) in [
-        ("toaster-right", colorRight, vectorRight),
-        ("toaster-left", colorLeft, vectorLeft),
-    ]:
-        msg = {
-            "id": id,
-            "color": color,
-            "shape": "vect",
-            "ttl": this.over_ttl,
-            "vector": vector
-        }
-        this.id_list.append(msg["id"])
-        this.overlay.send_raw(msg, delay=this.over_ms_delay)
+    for ds in range(2):
+        toaster = this.stn_canvas.get_toaster(radiusP, s=ds)
+        vectorRight = [{"x": aspect(centerX+dx), "y": centerY+dy} for (dx, dy) in toaster]
+        vectorLeft = [{"x": aspect(centerX-dx), "y": centerY+dy} for (dx, dy) in toaster]
+        colorRight = "red" if this.backward else "green"
+        colorLeft = "green" if this.backward else "red"
+        for (id, color, vector) in [
+            (f"toaster-right-{ds}", colorRight, vectorRight),
+            (f"toaster-left-{ds}", colorLeft, vectorLeft),
+        ]:
+            msg = {
+                "id": id,
+                "color": color,
+                "shape": "vect",
+                "ttl": this.over_ttl,
+                "vector": vector
+            }
+            this.id_list.append(msg["id"])
+            this.overlay.send_raw(msg, delay=this.over_ms_delay)
 
 def draw_overlay_pad(pad):
     if this.curr_show and pad:
