@@ -24,6 +24,7 @@ You will need to re-start EDMC for it to notice the new plugin.
   - 0 (Default, no limitation)
   - -1 (current window width, will be replaced with the actual value after closing the settings)
   - otherwise the minimum value is 150
+* Hide station canvas: Don't show the station graphic in the EDMC window.
 * Overlay
   - Use overlay if available: if the EDMCOverlay plugin is installed use it (Default: off)
   - Station Radius: the radius of the overlay station (Default: 100)

@@ -23,10 +23,11 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.4'
+VERSION = '1.5.0'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 PREFSNAME_MAX_WIDTH = "landingpad_max_width"
+PREFSNAME_HIDE_CANVAS = "landingpad_hide_canvas"
 OPTIONS_GREENSIDE = [_("right"), _("left")]
 MAX_WIDTH_MINIMUM = 150
 
@@ -37,6 +38,7 @@ class ModuleGlobals():
 this = ModuleGlobals()
 this.stn_frame = None
 this.stn_canvas = None
+this.use_canvas = True
 this.curr_show = None
 this.backward = False
 this.max_width = 0
@@ -290,16 +292,23 @@ def frame_resize(event):
     event.widget.grid(sticky=tk.EW)
     this.stn_canvas.config(width=event.width, height=event.width)
 
+def show_canvas():
+    if this.use_canvas:
+        this.stn_frame.grid()
+        this.dummy.grid_remove()
+
+def hide_canvas():
+    this.stn_frame.grid_remove()
+    this.dummy.grid()
+
 def show_station(show):
     if this.curr_show != show:
         this.curr_show = show
         if show:
-            this.stn_frame.grid()
-            this.dummy.grid_remove()
+            show_canvas()
             show_overlay()
         else:
-            this.stn_frame.grid_remove()
-            this.dummy.grid()
+            hide_canvas()
             hide_overlay()
 
 def get_overlay_prefs(parent):
@@ -378,6 +387,8 @@ def plugin_app(parent):
     this.dummy = tk.Frame(frame)       # dummy frame for resize
 
     # station canvas
+    this.use_canvas = not config.get_int(PREFSNAME_HIDE_CANVAS)
+    this.prefs_hide_canvas = tk.IntVar(value=not this.use_canvas)
     this.stn_canvas = LandingPads(
         this.stn_frame, highlightthickness=0,
         col_stn=this.col_stn, col_pad=this.col_pad, backward=this.backward,
@@ -410,6 +421,8 @@ def plugin_prefs(parent, cmdr, is_beta):
 
     nb.Label(frame, text=_('max. Width')).grid(row=11, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
     nb.Entry(frame, textvariable=this.prefs_max_width).grid(row=11, column=1, columnspan=2, padx=PADX, pady=PADY, sticky=tk.W)
+
+    nb.Checkbutton(frame, text=_('Hide station canvas'), variable=this.prefs_hide_canvas).grid(row=12, column=1, columnspan=2, padx=PADX, pady=PADY, sticky=tk.W)
 
     nb.Label(frame).grid(sticky=tk.W)
     nb.Label(frame, text=_('Overlay')).grid(row=15, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
@@ -458,6 +471,9 @@ def prefs_changed(cmdr, is_beta):
             this.max_width = max(this.max_width, MAX_WIDTH_MINIMUM)
         this.prefs_max_width.set(this.max_width)
     config.set(PREFSNAME_MAX_WIDTH, this.max_width)
+
+    this.use_canvas = not this.prefs_hide_canvas.get()
+    config.set(PREFSNAME_HIDE_CANVAS, not this.use_canvas)
 
     this.use_overlay = this.prefs_use_over.get()
     config.set(PREFSNAME_USE_OVERLAY, this.use_overlay)
