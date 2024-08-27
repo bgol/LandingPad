@@ -23,12 +23,12 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.5.2'
+VERSION = '1.5.3'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 PREFSNAME_MAX_WIDTH = "landingpad_max_width"
 PREFSNAME_HIDE_CANVAS = "landingpad_hide_canvas"
-OPTIONS_GREENSIDE = [_("right"), _("left")]
+OPTIONS_GREENSIDE = ["right", "left"]
 MAX_WIDTH_MINIMUM = 150
 
 class ModuleGlobals():
@@ -416,37 +416,37 @@ def plugin_prefs(parent, cmdr, is_beta):
     HyperlinkLabel(frame, text='LandingPad', background=nb.Label().cget('background'), url='https://github.com/bgol/LandingPad', underline=True).grid(row=1, columnspan=2, padx=2*PADX, sticky=tk.W)
     nb.Label(frame, text = 'Version %s' % VERSION).grid(row=1, column=2, padx=PADX, sticky=tk.E)
 
-    nb.Label(frame, text=_('Greenside')).grid(row=10, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
+    nb.Label(frame, text='Greenside').grid(row=10, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
     nb.OptionMenu(frame, this.greenside, this.greenside.get(), *OPTIONS_GREENSIDE).grid(row=10, column=1, columnspan=2, padx=PADX, sticky=tk.W)
 
-    nb.Label(frame, text=_('max. Width')).grid(row=11, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
+    nb.Label(frame, text='max. Width').grid(row=11, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
     nb.Entry(frame, textvariable=this.prefs_max_width).grid(row=11, column=1, columnspan=2, padx=PADX, pady=PADY, sticky=tk.W)
 
-    nb.Checkbutton(frame, text=_('Hide station canvas'), variable=this.prefs_hide_canvas).grid(row=12, column=1, columnspan=2, padx=PADX, pady=PADY, sticky=tk.W)
+    nb.Checkbutton(frame, text='Hide station canvas', variable=this.prefs_hide_canvas).grid(row=12, column=1, columnspan=2, padx=PADX, pady=PADY, sticky=tk.W)
 
     nb.Label(frame).grid(sticky=tk.W)
-    nb.Label(frame, text=_('Overlay')).grid(row=15, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
-    nb.Checkbutton(frame, text=_('Use overlay if available'), variable=this.prefs_use_over).grid(row=15, column=2, padx=PADX, sticky=tk.W)
+    nb.Label(frame, text='Overlay').grid(row=15, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
+    nb.Checkbutton(frame, text='Use overlay if available', variable=this.prefs_use_over).grid(row=15, column=2, padx=PADX, sticky=tk.W)
     ttk.Separator(frame, orient=tk.HORIZONTAL).grid(columnspan=3, padx=PADX, pady=PADY, sticky=tk.EW)
 
-    nb.Label(frame, text=_('Station')).grid(row=20, padx=2*PADX, sticky=tk.W)
-    nb.Label(frame, text=_('Radius')).grid(row=20, column=1, padx=PADX, sticky=tk.E)
+    nb.Label(frame, text='Station').grid(row=20, padx=2*PADX, sticky=tk.W)
+    nb.Label(frame, text='Radius').grid(row=20, column=1, padx=PADX, sticky=tk.E)
     nb.Entry(frame, textvariable=this.prefs_radius).grid(row=20, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
 
-    nb.Label(frame, text=_('Center coordinates')).grid(row=21, padx=2*PADX, sticky=tk.W)
-    nb.Label(frame, text=_('X')).grid(row=21, column=1, padx=PADX, sticky=tk.E)
+    nb.Label(frame, text='Center coordinates').grid(row=21, padx=2*PADX, sticky=tk.W)
+    nb.Label(frame, text='X').grid(row=21, column=1, padx=PADX, sticky=tk.E)
     nb.Entry(frame, textvariable=this.prefs_center_x).grid(row=21, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
-    nb.Label(frame, text=_('Y')).grid(row=22, column=1, padx=PADX, sticky=tk.E)
+    nb.Label(frame, text='Y').grid(row=22, column=1, padx=PADX, sticky=tk.E)
     nb.Entry(frame, textvariable=this.prefs_center_y).grid(row=22, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
 
-    nb.Label(frame, text=_('Screen')).grid(row=23, padx=2*PADX, sticky=tk.W)
-    nb.Label(frame, text=_('Width')).grid(row=23, column=1, padx=PADX, sticky=tk.E)
+    nb.Label(frame, text='Screen').grid(row=23, padx=2*PADX, sticky=tk.W)
+    nb.Label(frame, text='Width').grid(row=23, column=1, padx=PADX, sticky=tk.E)
     nb.Entry(frame, textvariable=this.prefs_screen_w).grid(row=23, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
-    nb.Label(frame, text=_('Height')).grid(row=24, column=1, padx=PADX, sticky=tk.E)
+    nb.Label(frame, text='Height').grid(row=24, column=1, padx=PADX, sticky=tk.E)
     nb.Entry(frame, textvariable=this.prefs_screen_h).grid(row=24, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
 
-    nb.Label(frame, text=_('Drawing delay')).grid(row=31, padx=2*PADX, sticky=tk.W)
-    nb.Label(frame, text=_('msec')).grid(row=31, column=1, padx=PADX, sticky=tk.E)
+    nb.Label(frame, text='Drawing delay').grid(row=31, padx=2*PADX, sticky=tk.W)
+    nb.Label(frame, text='msec').grid(row=31, column=1, padx=PADX, sticky=tk.E)
     nb.Entry(frame, textvariable=this.prefs_ms_delay).grid(row=31, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
 
     return frame
