@@ -20,7 +20,7 @@ from config import appname, config
 PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
-__version_info__ = (2, 0, 3)
+__version_info__ = (2, 0, 4)
 __version__ = ".".join(map(str, __version_info__))
 
 PLUGIN_URL = 'https://github.com/bgol/LandingPad'
@@ -42,18 +42,18 @@ class This():
     col_pad: str = "blue"
     backward: bool = False
     max_width: int = 0
-    use_canvas: int = True
+    use_canvas: bool = True
 
     # EDMC Overlay settings
-    use_overlay = False
-    over_radius = 100
-    over_center_x = 100
-    over_center_y = 490
-    over_aspect_x = 1
-    over_ms_delay = 100
-    over_color_stn = "#ffffff"
-    over_color_pad = "yellow"
-    over_ttl = 10*60
+    use_overlay: bool = False
+    over_radius: int = 100
+    over_center_x: int = 100
+    over_center_y: int = 490
+    over_aspect_x: int = 1
+    over_ms_delay: int = 100
+    over_color_stn: str = "#ffffff"
+    over_color_pad: str = "yellow"
+    over_ttl: int = 10*60
 
     # other used globals
     id_list = []
@@ -67,14 +67,14 @@ class This():
     stn_canvas: 'LandingPads' = None
     greenside: tk.StringVar = None
     prefs_max_width: tk.IntVar = None
-    prefs_hide_canvas: tk.IntVar = None
+    prefs_hide_canvas: tk.BooleanVar = None
     overlay: 'Overlay' = None
     prefs_radius: tk.IntVar = None
     prefs_center_x: tk.IntVar = None
     prefs_center_y: tk.IntVar = None
     prefs_screen_w: tk.IntVar = None
     prefs_screen_h: tk.IntVar = None
-    prefs_use_over: tk.IntVar = None
+    prefs_use_over: tk.BooleanVar = None
     prefs_ms_delay: tk.IntVar = None
 
     def __str__(self) -> str:
@@ -110,6 +110,8 @@ VIRTUAL_ORIGIN_Y = 40.0
 # For compatibility with pre-5.0.0
 if not hasattr(config, "get_int"):
     config.get_int = config.getint
+if not hasattr(config, 'get_bool'):
+    config.get_bool = lambda key, default=False: bool(config.getint(key))
 if not hasattr(config, "get_str"):
     config.get_str = config.get
 
@@ -348,7 +350,7 @@ def show_station(show):
 
 def get_overlay_prefs(parent):
 
-    this.use_overlay = config.get_int(PREFSNAME_USE_OVERLAY)
+    this.use_overlay = config.get_bool(PREFSNAME_USE_OVERLAY, default=False)
     if config.get_str(PREFSNAME_MS_DELAY) is not None:
         this.over_ms_delay = int(config.get_str(PREFSNAME_MS_DELAY))
 
@@ -380,7 +382,7 @@ def get_overlay_prefs(parent):
     this.prefs_center_y = tk.IntVar(value=this.over_center_y)
     this.prefs_screen_w = tk.IntVar(value=int(sw))
     this.prefs_screen_h = tk.IntVar(value=int(sh))
-    this.prefs_use_over = tk.IntVar(value=this.use_overlay)
+    this.prefs_use_over = tk.BooleanVar(value=this.use_overlay)
     this.prefs_ms_delay = tk.IntVar(value=this.over_ms_delay)
 
 def try_overlay():
@@ -405,8 +407,8 @@ def plugin_app(parent):
     this.col_pad = "yellow" if theme else "blue"
 
     # which side is green
-    this.backward = config.get_int(PREFSNAME_BACKWARD)
-    this.greenside = tk.StringVar(value=OPTIONS_GREENSIDE[this.backward])
+    this.backward = config.get_bool(PREFSNAME_BACKWARD, default=False)
+    this.greenside = tk.StringVar(value=OPTIONS_GREENSIDE[1 if this.backward else 0])
 
     # maximum plugin width for EDMC window
     this.max_width = config.get_int(PREFSNAME_MAX_WIDTH)
@@ -419,8 +421,8 @@ def plugin_app(parent):
     this.dummy = tk.Frame(frame)       # dummy frame for resize
 
     # station canvas
-    this.use_canvas = not config.get_int(PREFSNAME_HIDE_CANVAS)
-    this.prefs_hide_canvas = tk.IntVar(value=not this.use_canvas)
+    this.use_canvas = not config.get_bool(PREFSNAME_HIDE_CANVAS, default=False)
+    this.prefs_hide_canvas = tk.BooleanVar(value=not this.use_canvas)
     this.stn_canvas = LandingPads(
         this.stn_frame, highlightthickness=0,
         col_stn=this.col_stn, col_pad=this.col_pad, backward=this.backward,
