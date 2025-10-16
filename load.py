@@ -20,7 +20,8 @@ from config import appname, config
 PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
-VERSION = '2.0.1'
+__version_info__ = (2, 0, 2)
+__version__ = ".".join(map(str, __version_info__))
 
 PLUGIN_URL = 'https://github.com/bgol/LandingPad'
 PREFSNAME_BACKWARD = "landingpad_backward"
@@ -413,7 +414,7 @@ def plugin_prefs(parent, cmdr, is_beta):
         background=nb.Label().cget('background'),
         url=PLUGIN_URL, underline=True
     ).grid(row=1, columnspan=2, padx=2*PADX, sticky=tk.W)
-    nb.Label(frame, text = 'Version %s' % VERSION).grid(row=1, column=2, padx=PADX, sticky=tk.E)
+    nb.Label(frame, text=f'Version {__version__}').grid(row=1, column=2, padx=PADX, sticky=tk.E)
 
     nb.Label(frame, text='Greenside').grid(row=10, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
     nb.OptionMenu(frame, this.greenside, this.greenside.get(), *OPTIONS_GREENSIDE).grid(row=10, column=1, columnspan=2, padx=PADX, sticky=tk.W)
