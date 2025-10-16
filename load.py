@@ -20,56 +20,92 @@ from config import appname, config
 PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
-__version_info__ = (2, 0, 2)
+__version_info__ = (2, 0, 3)
 __version__ = ".".join(map(str, __version_info__))
 
 PLUGIN_URL = 'https://github.com/bgol/LandingPad'
 PREFSNAME_BACKWARD = "landingpad_backward"
 PREFSNAME_MAX_WIDTH = "landingpad_max_width"
 PREFSNAME_HIDE_CANVAS = "landingpad_hide_canvas"
+PREFSNAME_STN_OVERLAY = "landingpad_stn_overlay"
+PREFSNAME_COL_OVERLAY = "landingpad_col_overlay"
+PREFSNAME_SCR_OVERLAY = "landingpad_scr_overlay"
+PREFSNAME_USE_OVERLAY = "landingpad_use_overlay"
+PREFSNAME_MS_DELAY = "landingpad_ms_delay"
 OPTIONS_GREENSIDE = ["right", "left"]
 MAX_WIDTH_MINIMUM = 150
 
-class ModuleGlobals():
+class This():
     """For holding module globals"""
-    pass
+    # general settings
+    col_stn: str = "black"
+    col_pad: str = "blue"
+    backward: bool = False
+    max_width: int = 0
+    use_canvas: int = True
 
-this = ModuleGlobals()
-this.stn_frame = None
-this.stn_canvas = None
-this.use_canvas = True
-this.curr_show = None
-this.backward = False
-this.max_width = 0
-this.col_stn = "black"
-this.col_pad = "blue"
-this.hide_events = ('Docked', 'DockingCancelled', 'DockingTimeout', 'StartJump', 'Shutdown')
-this.show_types = ('bernal', 'coriolis', 'orbis', 'asteroidbase', 'ocellus')
+    # EDMC Overlay settings
+    use_overlay = False
+    over_radius = 100
+    over_center_x = 100
+    over_center_y = 490
+    over_aspect_x = 1
+    over_ms_delay = 100
+    over_color_stn = "#ffffff"
+    over_color_pad = "yellow"
+    over_ttl = 10*60
 
-# EDMC Overlay settings
+    # other used globals
+    id_list = []
+    curr_show: bool = None
+    hide_events: set[str] = {'Docked', 'DockingCancelled', 'DockingTimeout', 'StartJump', 'Shutdown'}
+    show_types: set[str] = {'bernal', 'coriolis', 'orbis', 'asteroidbase', 'ocellus'}
+
+    # GUI elements
+    stn_frame: tk.Frame = None
+    dummy: tk.Frame = None
+    stn_canvas: 'LandingPads' = None
+    greenside: tk.StringVar = None
+    prefs_max_width: tk.IntVar = None
+    prefs_hide_canvas: tk.IntVar = None
+    overlay: 'Overlay' = None
+    prefs_radius: tk.IntVar = None
+    prefs_center_x: tk.IntVar = None
+    prefs_center_y: tk.IntVar = None
+    prefs_screen_w: tk.IntVar = None
+    prefs_screen_h: tk.IntVar = None
+    prefs_use_over: tk.IntVar = None
+    prefs_ms_delay: tk.IntVar = None
+
+    def __str__(self) -> str:
+        return ("\n".join(line for line in ("",
+            f"{self.col_stn = }",
+            f"{self.col_pad = }",
+            f"{self.backward = }",
+            f"{self.max_width = }",
+            f"{self.use_canvas = }",
+            f"{self.use_overlay = }",
+            f"{self.over_radius = }",
+            f"{self.over_center_x = }",
+            f"{self.over_center_y = }",
+            f"{self.over_aspect_x = }",
+            f"{self.over_ms_delay = }",
+            f"{self.over_color_stn = }",
+            f"{self.over_color_pad = }",
+            f"{self.over_ttl = }",
+            f"{self.hide_events = }",
+            f"{self.show_types = }",
+        )))
+
+this = This()
+
+# EDMC Overlay fixed settings
 SERVER_ADDRESS = "127.0.0.1"
 SERVER_PORT = 5010
 VIRTUAL_WIDTH = 1280.0
 VIRTUAL_HEIGHT = 1024.0
 VIRTUAL_ORIGIN_X = 20.0
 VIRTUAL_ORIGIN_Y = 40.0
-this.overlay = None
-this.use_overlay = False
-this.over_radius = 100
-this.over_center_x = 100
-this.over_center_y = 490
-this.over_aspect_x = 1
-this.over_ms_delay = 100
-this.over_color_stn = "#ffffff"
-this.over_color_pad = "yellow"
-this.over_ttl = 10*60
-this.id_list = []
-
-PREFSNAME_STN_OVERLAY = "landingpad_stn_overlay"
-PREFSNAME_COL_OVERLAY = "landingpad_col_overlay"
-PREFSNAME_SCR_OVERLAY = "landingpad_scr_overlay"
-PREFSNAME_USE_OVERLAY = "landingpad_use_overlay"
-PREFSNAME_MS_DELAY = "landingpad_ms_delay"
 
 # For compatibility with pre-5.0.0
 if not hasattr(config, "get_int"):
@@ -399,6 +435,8 @@ def plugin_app(parent):
 
     try_overlay()
     get_overlay_prefs(parent)
+
+    logger.debug(f"{this = !s}")
 
     return frame
 
