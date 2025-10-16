@@ -3,27 +3,19 @@
 # Display the "LandigPad" position for Starports.
 #
 
-from __future__ import print_function
-
-import sys
 import math
 import json
 import time
 import socket
-try:
-    # Python 2
-    import Tkinter as tk
-    import ttk
-except ModuleNotFoundError:
-    # Python 3
-    import tkinter as tk
-    from tkinter import ttk
+
+import tkinter as tk
+from tkinter import ttk
 
 import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-VERSION = '1.5.4'
+VERSION = '2.0.0'
 
 PREFSNAME_BACKWARD = "landingpad_backward"
 PREFSNAME_MAX_WIDTH = "landingpad_max_width"
@@ -360,9 +352,6 @@ def try_overlay():
             print("LandingPad: overlay not available")
 
 def plugin_start3(plugin_dir):
-    return plugin_start()
-
-def plugin_start():
     # nothing to do
     return 'LandingPad'
 
