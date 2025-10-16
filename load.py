@@ -3,6 +3,8 @@
 # Display the "LandigPad" position for Starports.
 #
 
+import logging
+import os
 import math
 import json
 import time
@@ -13,10 +15,14 @@ from tkinter import ttk
 
 import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
-from config import config
+from config import appname, config
 
-VERSION = '2.0.0'
+PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
+logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
+VERSION = '2.0.1'
+
+PLUGIN_URL = 'https://github.com/bgol/LandingPad'
 PREFSNAME_BACKWARD = "landingpad_backward"
 PREFSNAME_MAX_WIDTH = "landingpad_max_width"
 PREFSNAME_HIDE_CANVAS = "landingpad_hide_canvas"
@@ -97,7 +103,7 @@ class Overlay(object):
                 self.conn = socket.socket()
                 self.conn.connect((self.server, self.port))
             except Exception as err:
-                print("LandingPad: error in Overlay.connect: {}".format(err))
+                logger.warning("Can't connect to EDMC Overlay", exc_info=err)
                 self.conn = None
 
     def send_raw(self, msg, delay=100):
@@ -114,7 +120,7 @@ class Overlay(object):
                     delay = min(max(delay, 0), 500)
                     time.sleep(float(delay) / 1000.0)
             except Exception as err:
-                print("LandingPad: error in Overlay.send_raw: {}".format(err))
+                logger.warning("Can't send to EDMC Overlay", exc_info=err)
                 self.conn = None
 
 class LandingPads(tk.Canvas):
@@ -349,11 +355,11 @@ def try_overlay():
         except:
             this.overlay = None
         if not this.overlay:
-            print("LandingPad: overlay not available")
+            logger.warning("EDMC Overlay not available")
 
 def plugin_start3(plugin_dir):
-    # nothing to do
-    return 'LandingPad'
+    logger.info(f"{__version__ = }")
+    return PLUGIN_NAME
 
 def plugin_app(parent):
     # adapt to theme
@@ -402,7 +408,11 @@ def plugin_prefs(parent, cmdr, is_beta):
     frame = nb.Frame(parent)
     frame.columnconfigure(2, weight=1)
 
-    HyperlinkLabel(frame, text='LandingPad', background=nb.Label().cget('background'), url='https://github.com/bgol/LandingPad', underline=True).grid(row=1, columnspan=2, padx=2*PADX, sticky=tk.W)
+    HyperlinkLabel(
+        frame, text=PLUGIN_NAME,
+        background=nb.Label().cget('background'),
+        url=PLUGIN_URL, underline=True
+    ).grid(row=1, columnspan=2, padx=2*PADX, sticky=tk.W)
     nb.Label(frame, text = 'Version %s' % VERSION).grid(row=1, column=2, padx=PADX, sticky=tk.E)
 
     nb.Label(frame, text='Greenside').grid(row=10, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
