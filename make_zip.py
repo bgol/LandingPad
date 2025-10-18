@@ -18,6 +18,11 @@ def main():
     file_list = [
         "load.py",
         "README.md",
+        "lpads/__init__.py",
+        "lpads/base.py",
+        "lpads/misc.py",
+        "lpads/overlay.py",
+        "lpads/starport.py",
     ]
     set_VERSION(file_list[0])
     base_name = "LandingPad"
