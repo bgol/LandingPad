@@ -246,27 +246,6 @@ class FleetCarrierPadsOverlay():
         if not self.cur_pad:
             return
 
-        # cx, cy = self.fleetcarrier_canvas.get_pad_center(pad-1)
-        # rx = self.center_x + round_away(cx * self.unit_length)
-        # ry = self.center_y + round_away(cy * self.unit_length)
-
-        # for i, (px, py) in enumerate([(3, 9), (7, 7), (9, 3)]):
-        #     x = rx - px // 2
-        #     y = ry - py // 2
-        #     msg = {
-        #         "id": f"pad-{pad}-{i}",
-        #         "shape": "rect",
-        #         "color": self.color_pad,
-        #         "fill": self.color_pad,
-        #         "ttl": self.ttl,
-        #         "x": self.aspect(x),
-        #         "y": y,
-        #         "w": self.aspect(px),
-        #         "h": py,
-        #     }
-        #     self.id_list_pad.append(msg["id"])
-        #     self.overlay.send_raw(msg, delay=self.ms_delay)
-
         pad_index = (pad - 1) % self.fleetcarrier_canvas.pad_count
         x1, y1, x2, y2 = self.fleetcarrier_canvas.pad_list[pad_index]
         x1 = self.center_x + x1 * self.unit_length
