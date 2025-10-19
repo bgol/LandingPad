@@ -211,19 +211,19 @@ class FleetCarrierPadsOverlay():
         if max_y > self.max_y:
             self.center_y -= (max_y - self.max_y)
 
+    def convert_coords_to_rect(self, x1, y1, x2, y2):
+        x1 = self.center_x + x1 * self.unit_length
+        y1 = self.center_y + y1 * self.unit_length
+        x2 = self.center_x + x2 * self.unit_length
+        y2 = self.center_y + y2 * self.unit_length
+        return min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1)
+
     def draw_overlay_station(self):
         if not self.overlay:
             return
         self.check_station_box()
         for i, (x1, y1, x2, y2) in enumerate(self.fleetcarrier_canvas.pad_list):
-            x1 = self.center_x + x1 * self.unit_length
-            y1 = self.center_y + y1 * self.unit_length
-            x2 = self.center_x + x2 * self.unit_length
-            y2 = self.center_y + y2 * self.unit_length
-            x = min(x1, x2)
-            y = min(y1, y2)
-            w = abs(x2 - x1)
-            h = abs(y2 - y1)
+            x, y, w, h = self.convert_coords_to_rect(x1, y1, x2, y2)
             msg = {
                 "id": f"station-{i}",
                 "shape": "rect",
@@ -248,14 +248,7 @@ class FleetCarrierPadsOverlay():
 
         pad_index = (pad - 1) % self.fleetcarrier_canvas.pad_count
         x1, y1, x2, y2 = self.fleetcarrier_canvas.pad_list[pad_index]
-        x1 = self.center_x + x1 * self.unit_length
-        y1 = self.center_y + y1 * self.unit_length
-        x2 = self.center_x + x2 * self.unit_length
-        y2 = self.center_y + y2 * self.unit_length
-        x = min(x1, x2)
-        y = min(y1, y2)
-        w = abs(x2 - x1)
-        h = abs(y2 - y1)
+        x, y, w, h = self.convert_coords_to_rect(x1, y1, x2, y2)
         msg = {
             "id": f"pad-{pad}",
             "shape": "rect",
