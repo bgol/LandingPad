@@ -1,9 +1,11 @@
 # Landingpad display plugin for [EDMC](https://github.com/Marginal/EDMarketConnector/wiki)
 
-This plugin helps people to find their assigned landingpad position in starports.
+This plugin helps people to find their assigned landingpad position in starports or fleetcarriers (private and squadron).
 
-![Screenshot](images/Default.png)
-![Screenshot](images/Dark.png)
+![Screenshot](images/Default_Starport.png)
+![Screenshot](images/Default_Fleetcarrier.png)
+![Screenshot](images/Dark_Starport.png)
+![Screenshot](images/Dark_Fleetcarrier.png)
 
 ## Installation
 
@@ -31,6 +33,10 @@ You will need to re-start EDMC for it to notice the new plugin.
   - Center coordinates X/Y: the center position of the overlay station (Default: 100/490)
   - Screen Width/Height: the gamescreen resolution to keep the right aspect ratio (Default: screen of EDMC)
   - Drawing delay: delay between each drawing step in milliseconds (allowed range: 0 .. 500, Default: 100)
+
+* Special meaning for Fleetcarriers:
+  - Greenside `left` is an upside down carrier (rotated 180°).
+  - Station Radius times two is the sidelength of the squarebox which contains all pads.
 
 ## Acknowledgements
 
