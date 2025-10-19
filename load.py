@@ -13,13 +13,13 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import appname, config
 
-from lpads import StarportPads, Overlay, StarportPadsOverlay
+from lpads import Overlay, StarportPads, StarportPadsOverlay, FleetCarrierPads
 
 
 PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
-__version_info__ = (2, 1, 0)
+__version_info__ = (2, 2, 0)
 __version__ = ".".join(map(str, __version_info__))
 
 PLUGIN_URL = 'https://github.com/bgol/LandingPad'
@@ -57,16 +57,23 @@ class This():
     curr_show: bool = None
     hide_events: set[str] = {'Docked', 'DockingCancelled', 'DockingTimeout', 'StartJump', 'Shutdown'}
     starport_types: set[str] = {'bernal', 'coriolis', 'orbis', 'asteroidbase', 'ocellus'}
+    fleetcarrier_types: set[str] = {'fleetcarrier'}
+    curr_station_type: str | None = None
+    TYPE_STARPORT: str = "starport"
+    TYPE_FLEETCARRIER: str = "fleetcarrier"
 
     # GUI elements
-    stn_frame: tk.Frame = None
+    starport_frame: tk.Frame = None
+    fleetcarrier_frame: tk.Frame = None
     dummy: tk.Frame = None
     starport_canvas: StarportPads = None
+    fleetcarrier_canvas: FleetCarrierPads = None
     greenside: tk.StringVar = None
     prefs_max_width: tk.IntVar = None
     prefs_hide_canvas: tk.BooleanVar = None
-    overlay: Overlay = None
+    overlay: Overlay | None = None
     starport_overlay: StarportPadsOverlay = None
+    # TODO: fleetcarrier_overlay: FleetCarrierPadsOverlay = None
     prefs_radius: tk.IntVar = None
     prefs_center_x: tk.IntVar = None
     prefs_center_y: tk.IntVar = None
@@ -92,6 +99,8 @@ class This():
             f"{self.over_ttl = }",
             f"{self.hide_events = }",
             f"{self.starport_types = }",
+            f"{self.fleetcarrier_types = }",
+            f"{self.curr_station_type = }",
         )))
 
 this = This()
@@ -108,24 +117,38 @@ def frame_resize(event):
     # reset the grid settings for the frame
     event.widget.grid(sticky=tk.EW)
     this.starport_canvas.config(width=event.width, height=event.width)
+    this.fleetcarrier_canvas.config(width=event.width, height=event.width)
 
 def show_canvas():
     if this.use_canvas:
-        this.stn_frame.grid()
+        if this.curr_station_type == this.TYPE_STARPORT:
+            this.starport_frame.grid()
+        elif this.curr_station_type == this.TYPE_FLEETCARRIER:
+            this.fleetcarrier_frame.grid()
         this.dummy.grid_remove()
 
 def hide_canvas():
-    this.stn_frame.grid_remove()
+    this.starport_frame.grid_remove()
+    this.fleetcarrier_frame.grid_remove()
     this.dummy.grid()
 
 def show_overlay():
     if this.overlay is None and this.use_overlay:
         try_overlay()
         this.starport_overlay.config(overlay=this.overlay)
-    this.starport_overlay.show_overlay()
+        # TODO: this.fleetcarrier_overlay.config(overlay=this.overlay)
+    if this.curr_station_type == this.TYPE_STARPORT:
+        this.starport_overlay.show_overlay()
+    elif this.curr_station_type == this.TYPE_FLEETCARRIER:
+        # TODO: this.fleetcarrier_overlay.show_overlay()
+        pass
 
 def hide_overlay():
-    this.starport_overlay.hide_overlay()
+    if this.curr_station_type == this.TYPE_STARPORT:
+        this.starport_overlay.hide_overlay()
+    elif this.curr_station_type == this.TYPE_FLEETCARRIER:
+        # TODO: this.fleetcarrier_overlay.hide_overlay()
+        pass
 
 def show_station(show):
     if this.curr_show != show:
@@ -170,6 +193,12 @@ def get_overlay_prefs(parent):
         sw, sh, this.over_ms_delay, this.over_color_stn, this.over_color_pad, this.over_ttl,
         None, this.starport_canvas,
     )
+    # TODO:
+    # this.fleetcarrier_overlay = FleetCarrierPadsOverlay(
+    #     this.overlay, this.backward, this.over_radius, this.over_center_x, this.over_center_y,
+    #     sw, sh, this.over_ms_delay, this.over_color_stn, this.over_color_pad, this.over_ttl,
+    #     None, this.fleetcarrier_canvas,
+    # )
 
     this.prefs_radius = tk.IntVar(value=this.over_radius)
     this.prefs_center_x = tk.IntVar(value=this.over_center_x)
@@ -210,18 +239,24 @@ def plugin_app(parent):
         this.max_width = max(this.max_width, MAX_WIDTH_MINIMUM)
     this.prefs_max_width = tk.IntVar(value=this.max_width)
 
-    frame = tk.Frame(parent)           # outer frame
-    this.stn_frame = tk.Frame(frame)   # station frame
-    this.dummy = tk.Frame(frame)       # dummy frame for resize
+    frame = tk.Frame(parent)                    # outer frame
+    this.starport_frame = tk.Frame(frame)          # starport frame
+    this.fleetcarrier_frame = tk.Frame(frame)      # fleetcarrier frame
+    this.dummy = tk.Frame(frame)                   # dummy frame for resize/hide
 
     # station canvas
     this.use_canvas = not config.get_bool(PREFSNAME_HIDE_CANVAS, default=False)
     this.prefs_hide_canvas = tk.BooleanVar(value=not this.use_canvas)
     this.starport_canvas = StarportPads(
-        this.stn_frame, highlightthickness=0, backward=this.backward,
+        this.starport_frame, highlightthickness=0, backward=this.backward,
         col_stn=this.col_stn, col_pad=this.col_pad, max_with=this.max_width,
     )
     this.starport_canvas.grid()
+    this.fleetcarrier_canvas = FleetCarrierPads(
+        this.fleetcarrier_frame, highlightthickness=0, backward=this.backward,
+        col_stn=this.col_stn, col_pad=this.col_pad, max_with=this.max_width,
+    )
+    this.fleetcarrier_canvas.grid()
 
     # keep the station size in sync
     frame.bind("<Configure>", frame_resize)
@@ -300,11 +335,12 @@ def prefs_changed(cmdr, is_beta):
     this.max_width = this.prefs_max_width.get()
     if this.max_width != 0:
         if this.max_width < 0:
-            this.max_width = this.stn_frame.master.winfo_width()
+            this.max_width = this.dummy.master.winfo_width()
         else:
             this.max_width = max(this.max_width, MAX_WIDTH_MINIMUM)
         this.prefs_max_width.set(this.max_width)
     this.starport_canvas.config(max_width=this.max_width)
+    this.fleetcarrier_canvas.config(max_width=this.max_width)
     config.set(PREFSNAME_MAX_WIDTH, this.max_width)
 
     this.use_canvas = not this.prefs_hide_canvas.get()
@@ -328,34 +364,56 @@ def prefs_changed(cmdr, is_beta):
     config.set(PREFSNAME_MS_DELAY, str(this.over_ms_delay))
 
     # update station
-    width = this.stn_frame.master.winfo_width()
+    width = this.dummy.master.winfo_width()
     this.starport_canvas.config(col_stn=this.col_stn, col_pad=this.col_pad, backward=this.backward, width=width)
+    this.fleetcarrier_canvas.config(col_stn=this.col_stn, col_pad=this.col_pad, backward=this.backward, width=width)
     if not this.use_overlay:
         this.overlay = None
         this.starport_overlay.hide_overlay()
+        # TODO: this.fleetcarrier_overlay.hide_overlay()
     this.starport_overlay.config(
         overlay=this.overlay, backward=this.backward, radius=this.over_radius,
         center_x=this.over_center_x, center_y=this.over_center_y,
         screen_w=float(sw), screen_h=float(sh), ms_delay=this.over_ms_delay,
     )
+    # TODO:
+    # this.fleetcarrier_overlay.config(
+    #     overlay=this.overlay, backward=this.backward, radius=this.over_radius,
+    #     center_x=this.over_center_x, center_y=this.over_center_y,
+    #     screen_w=float(sw), screen_h=float(sh), ms_delay=this.over_ms_delay,
+    # )
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     if entry['event'] == 'DockingGranted':
-        typ = entry.get('StationType', 'Unknown')
-        if typ.lower() in this.starport_types:
-            # starports only
-            pad = int(entry['LandingPad'])
+        typ = entry.get('StationType', 'Unknown').lower()
+        pad = int(entry['LandingPad'])
+        if typ in this.starport_types:
+            this.curr_station_type = this.TYPE_STARPORT
             this.starport_canvas.config(cur_pad=pad)
             this.starport_overlay.config(cur_pad=pad)
             show_station(True)
+        elif typ in this.fleetcarrier_types:
+            this.curr_station_type = this.TYPE_FLEETCARRIER
+            is_squadroncarrier = len(entry["StationName"]) == 4
+            this.fleetcarrier_canvas.config(cur_pad=pad, squadron_carrier=is_squadroncarrier)
+            # TODO: this.fleetcarrier_overlay.config(cur_pad=pad)
+            show_station(True)
+        else:
+            this.curr_station_type = None
+            logger.info(f"unsupported stationtype: {typ}")
     elif entry['event'] in this.hide_events:
         show_station(False)
+        this.curr_station_type = None
     elif entry['event'] == 'Music':
         if entry['MusicTrack'] == "MainMenu":
             # only way I know, if the user logged out
             show_station(False)
+            this.curr_station_type = None
     elif entry["event"] == "SendText":
         if entry["Message"].startswith("!pad"):
+            if this.curr_station_type != this.TYPE_STARPORT:
+                show_station(False)
+            this.curr_station_type = this.TYPE_STARPORT
             try:
                 pad = int(entry["Message"][4:])
             except ValueError:
@@ -363,6 +421,24 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             if pad:
                 this.starport_canvas.config(cur_pad=pad)
                 this.starport_overlay.config(cur_pad=pad)
+                show_station(True)
+            else:
+                show_station(False)
+        elif entry["Message"].startswith("!fcpad"):
+            if this.curr_station_type != this.TYPE_FLEETCARRIER:
+                show_station(False)
+            this.curr_station_type = this.TYPE_FLEETCARRIER
+            try:
+                pad = int(entry["Message"][6:])
+            except ValueError:
+                pad = None
+            if pad:
+                is_squadroncarrier = False
+                if pad < 0:
+                    is_squadroncarrier = True
+                    pad = -pad
+                this.fleetcarrier_canvas.config(cur_pad=pad, squadron_carrier=is_squadroncarrier)
+                # TODO: this.fleetcarrier_overlay.config(cur_pad=pad)
                 show_station(True)
             else:
                 show_station(False)

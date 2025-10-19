@@ -20,6 +20,7 @@ def main():
         "README.md",
         "lpads/__init__.py",
         "lpads/base.py",
+        "lpads/fleetcarrier.py",
         "lpads/misc.py",
         "lpads/overlay.py",
         "lpads/starport.py",
