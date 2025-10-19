@@ -57,10 +57,10 @@ class FleetCarrierPads(LandingPads):
 
     def calc_unit_length(self):
         if self.squadron_carrier:
-            ux = int(self.width / (2 * SQUADRON_CARRIER_OFFSET + FLEETCARRIER_BOX_WIDTH))
+            ux = ((self.width - 4) / (2 * SQUADRON_CARRIER_OFFSET + FLEETCARRIER_BOX_WIDTH))
         else:
-            ux = int(self.width / FLEETCARRIER_BOX_WIDTH)
-        uy = int(self.height / FLEETCARRIER_BOX_HEIGHT)
+            ux = ((self.width - 4) / FLEETCARRIER_BOX_WIDTH)
+        uy = ((self.height - 4) / FLEETCARRIER_BOX_HEIGHT)
         self._unit_length = max(min(ux, uy), 1)
 
     def on_resize(self, event):
@@ -85,11 +85,11 @@ class FleetCarrierPads(LandingPads):
         self.delete("all")
         self.pad_obj = None
         self.stn_obj = False
-        self.center_x = center_x = round_away(self.width / 2)
-        self.center_y = center_y = round_away(self.height / 2)
+        self.center_x = self.width / 2
+        self.center_y = self.height / 2
         testval = abs(self.unit_length)
         strong = 4 - (testval < 16) - (testval < 9) - (testval < 4)
-        for x1, y1, x2, y2 in self.get_pad_boxes(center_x, center_y):
+        for x1, y1, x2, y2 in self.get_pad_boxes(self.center_x, self.center_y):
             self.create_rectangle(x1, y1, x2, y2, width=strong, outline=self.col_stn, fill='')
         self.stn_obj = True
 
@@ -110,8 +110,8 @@ class FleetCarrierPads(LandingPads):
             cx, cy = self.get_pad_center(pad-1)
             dot = 2 if ((pad-1) % 16) < 8 else 1
             ov = dot * self.unit_length
-            rx = self.center_x + round_away(cx * self.unit_length)
-            ry = self.center_y + round_away(cy * self.unit_length)
+            rx = self.center_x + cx * self.unit_length
+            ry = self.center_y + cy * self.unit_length
             self.pad_obj = self.create_oval(rx-ov, ry-ov, rx+ov, ry+ov, fill=self.col_pad)
 
 class FleetCarrierPadsOverlay():
