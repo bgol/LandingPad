@@ -4,8 +4,11 @@ This plugin helps people to find their assigned landingpad position in starports
 
 ![Screenshot](images/Default_Starport.png)
 ![Screenshot](images/Default_Fleetcarrier.png)
+![Screenshot](images/Default_Squadroncarrier.png)
+
 ![Screenshot](images/Dark_Starport.png)
 ![Screenshot](images/Dark_Fleetcarrier.png)
+![Screenshot](images/Dark_Squadroncarrier.png)
 
 ## Installation
 
