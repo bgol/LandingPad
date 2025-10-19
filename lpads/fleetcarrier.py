@@ -1,7 +1,6 @@
-import tkinter as tk
-
 from .base import LandingPads
-from .misc import round_away
+from .misc import round_away, calc_aspect_x
+from .overlay import VIRTUAL_WIDTH, VIRTUAL_HEIGHT
 
 
 FLEETCARRIER_BOX_WIDTH = 34
@@ -114,3 +113,194 @@ class FleetCarrierPads(LandingPads):
             rx = self.center_x + round_away(cx * self.unit_length)
             ry = self.center_y + round_away(cy * self.unit_length)
             self.pad_obj = self.create_oval(rx-ov, ry-ov, rx+ov, ry+ov, fill=self.col_pad)
+
+class FleetCarrierPadsOverlay():
+
+    id_list_pad: list = []
+    id_list_station: list = []
+    config_attr_set = {
+        "overlay", "backward", "radius", "center_x", "center_y", "ms_delay",
+        "color_stn", "color_pad", "ttl", "cur_pad", "starport_canvas", "squadron_carrier",
+    }
+
+    def __init__(
+            self, overlay, backward, radius, center_x, center_y, screen_w, screen_h,
+            ms_delay, color_stn, color_pad, ttl, cur_pad, fleetcarrier_canvas, squadron_carrier=False,
+    ):
+        self.overlay = overlay
+        self.backward = backward
+        self.radius = radius
+        self.center_x = center_x
+        self.center_y = center_y
+        self.screen_w = screen_w
+        self.screen_h = screen_h
+        self.aspect_x = calc_aspect_x(screen_w, screen_h)
+        self.max_x = round_away((VIRTUAL_WIDTH+31) / self.aspect_x)
+        self.max_y = round_away(VIRTUAL_HEIGHT+17)
+        self.ms_delay = ms_delay
+        self.color_stn = color_stn
+        self.color_pad = color_pad
+        self.ttl = ttl
+        self.cur_pad = cur_pad
+        self.fleetcarrier_canvas = fleetcarrier_canvas
+        self.squadron_carrier = squadron_carrier
+        self.show = False
+        self.calc_unit_length()
+
+    def aspect(self, x):
+        return round_away(self.aspect_x * x)
+
+    @property
+    def unit_length(self):
+        return -self._unit_length if self.backward else self._unit_length
+
+    @property
+    def diameter(self):
+        return self.radius * 2
+
+    def calc_unit_length(self):
+        if self.squadron_carrier:
+            ux = int(self.diameter / (2 * SQUADRON_CARRIER_OFFSET + FLEETCARRIER_BOX_WIDTH))
+        else:
+            ux = int(self.diameter / FLEETCARRIER_BOX_WIDTH)
+        uy = int(self.diameter / FLEETCARRIER_BOX_HEIGHT)
+        self._unit_length = max(ux, uy, 1)
+
+    def config(self, **kwargs):
+        for attr_name in (self.config_attr_set & kwargs.keys()):
+            setattr(self, attr_name, kwargs[attr_name])
+
+        if all(val in kwargs for val in ("screen_w", "screen_h")):
+            self.aspect_x = calc_aspect_x(kwargs["screen_w"], kwargs["screen_h"])
+            self.max_x = round_away((VIRTUAL_WIDTH+31) / self.aspect_x)
+            self.max_y = round_away(VIRTUAL_HEIGHT+17)
+
+        if any(val in kwargs for val in ("radius", "squadron_carrier")):
+            self.calc_unit_length()
+
+        if self.show:
+            if len(kwargs) == 1 and "cur_pad" in kwargs:
+                # redraw pad only
+                self.draw_overlay_pad(self.cur_pad)
+            else:
+                # redraw station with a very small delay
+                old_ms_delay = self.ms_delay
+                self.ms_delay = min(old_ms_delay, 5)
+                self.hide_overlay()
+                self.show_overlay()
+                self.ms_delay = old_ms_delay
+
+    def check_station_box(self):
+        min_x = max_x = self.center_x
+        min_y = max_y = self.center_y
+        for x1, y1, x2, y2 in self.fleetcarrier_canvas.pad_list:
+            for check_x in (int(self.center_x + x * self.unit_length) for x in (x1, x2)):
+                min_x = min(min_x, check_x)
+                max_x = max(max_x, check_x)
+            for check_y in (int(self.center_y + y * self.unit_length) for y in (y1, y2)):
+                min_y = min(min_y, check_y)
+                max_y = max(max_y, check_y)
+        if min_x < 0:
+            self.center_x -= min_x
+            max_x -= min_x
+        if min_y < 0:
+            self.center_y -= min_y
+            max_y -= min_y
+        if max_x > self.max_x:
+            self.center_x -= (max_x - self.max_x)
+        if max_y > self.max_y:
+            self.center_y -= (max_y - self.max_y)
+
+    def draw_overlay_station(self):
+        if not self.overlay:
+            return
+        self.check_station_box()
+        for i, (x1, y1, x2, y2) in enumerate(self.fleetcarrier_canvas.pad_list):
+            x1 = self.center_x + x1 * self.unit_length
+            y1 = self.center_y + y1 * self.unit_length
+            x2 = self.center_x + x2 * self.unit_length
+            y2 = self.center_y + y2 * self.unit_length
+            x = min(x1, x2)
+            y = min(y1, y2)
+            w = abs(x2 - x1)
+            h = abs(y2 - y1)
+            msg = {
+                "id": f"station-{i}",
+                "shape": "rect",
+                "color": self.color_stn,
+                "ttl": self.ttl,
+                "x": self.aspect(x),
+                "y": y,
+                "w": self.aspect(w),
+                "h": h,
+            }
+            self.id_list_station.append(msg["id"])
+            self.overlay.send_raw(msg, delay=self.ms_delay)
+
+    def draw_overlay_pad(self, pad):
+        if len(self.id_list_pad) > 0:
+            for gfx_id in reversed(self.id_list_pad):
+                self.overlay.send_raw({"id": gfx_id, "ttl": 0}, delay=self.ms_delay)
+            del self.id_list_pad[:]
+        self.cur_pad = pad
+        if not self.cur_pad:
+            return
+
+        # cx, cy = self.fleetcarrier_canvas.get_pad_center(pad-1)
+        # rx = self.center_x + round_away(cx * self.unit_length)
+        # ry = self.center_y + round_away(cy * self.unit_length)
+
+        # for i, (px, py) in enumerate([(3, 9), (7, 7), (9, 3)]):
+        #     x = rx - px // 2
+        #     y = ry - py // 2
+        #     msg = {
+        #         "id": f"pad-{pad}-{i}",
+        #         "shape": "rect",
+        #         "color": self.color_pad,
+        #         "fill": self.color_pad,
+        #         "ttl": self.ttl,
+        #         "x": self.aspect(x),
+        #         "y": y,
+        #         "w": self.aspect(px),
+        #         "h": py,
+        #     }
+        #     self.id_list_pad.append(msg["id"])
+        #     self.overlay.send_raw(msg, delay=self.ms_delay)
+
+        pad_index = (pad - 1) % self.fleetcarrier_canvas.pad_count
+        x1, y1, x2, y2 = self.fleetcarrier_canvas.pad_list[pad_index]
+        x1 = self.center_x + x1 * self.unit_length
+        y1 = self.center_y + y1 * self.unit_length
+        x2 = self.center_x + x2 * self.unit_length
+        y2 = self.center_y + y2 * self.unit_length
+        x = min(x1, x2)
+        y = min(y1, y2)
+        w = abs(x2 - x1)
+        h = abs(y2 - y1)
+        msg = {
+            "id": f"pad-{pad}",
+            "shape": "rect",
+            "color": self.color_pad,
+            "fill": self.color_pad,
+            "ttl": self.ttl,
+            "x": self.aspect(x),
+            "y": y,
+            "w": self.aspect(w),
+            "h": h,
+        }
+        self.id_list_station.append(msg["id"])
+        self.overlay.send_raw(msg, delay=self.ms_delay)
+
+    def hide_overlay(self):
+        if self.show and self.overlay:
+            for del_list in (self.id_list_pad, self.id_list_station):
+                for gfx_id in reversed(del_list):
+                    self.overlay.send_raw({"id": gfx_id, "ttl": 0}, delay=self.ms_delay)
+                del del_list[:]
+            self.show = False
+
+    def show_overlay(self):
+        if self.overlay:
+            self.draw_overlay_station()
+            self.draw_overlay_pad(self.cur_pad)
+            self.show = True

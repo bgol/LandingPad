@@ -13,13 +13,15 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import appname, config
 
-from lpads import Overlay, StarportPads, StarportPadsOverlay, FleetCarrierPads
+from lpads import (
+    Overlay, StarportPads, StarportPadsOverlay, FleetCarrierPads, FleetCarrierPadsOverlay
+)
 
 
 PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
-__version_info__ = (2, 2, 0)
+__version_info__ = (2, 3, 0)
 __version__ = ".".join(map(str, __version_info__))
 
 PLUGIN_URL = 'https://github.com/bgol/LandingPad'
@@ -73,7 +75,7 @@ class This():
     prefs_hide_canvas: tk.BooleanVar = None
     overlay: Overlay | None = None
     starport_overlay: StarportPadsOverlay = None
-    # TODO: fleetcarrier_overlay: FleetCarrierPadsOverlay = None
+    fleetcarrier_overlay: FleetCarrierPadsOverlay = None
     prefs_radius: tk.IntVar = None
     prefs_center_x: tk.IntVar = None
     prefs_center_y: tk.IntVar = None
@@ -136,19 +138,17 @@ def show_overlay():
     if this.overlay is None and this.use_overlay:
         try_overlay()
         this.starport_overlay.config(overlay=this.overlay)
-        # TODO: this.fleetcarrier_overlay.config(overlay=this.overlay)
+        this.fleetcarrier_overlay.config(overlay=this.overlay)
     if this.curr_station_type == this.TYPE_STARPORT:
         this.starport_overlay.show_overlay()
     elif this.curr_station_type == this.TYPE_FLEETCARRIER:
-        # TODO: this.fleetcarrier_overlay.show_overlay()
-        pass
+        this.fleetcarrier_overlay.show_overlay()
 
 def hide_overlay():
     if this.curr_station_type == this.TYPE_STARPORT:
         this.starport_overlay.hide_overlay()
     elif this.curr_station_type == this.TYPE_FLEETCARRIER:
-        # TODO: this.fleetcarrier_overlay.hide_overlay()
-        pass
+        this.fleetcarrier_overlay.hide_overlay()
 
 def show_station(show):
     if this.curr_show != show:
@@ -193,12 +193,11 @@ def get_overlay_prefs(parent):
         sw, sh, this.over_ms_delay, this.over_color_stn, this.over_color_pad, this.over_ttl,
         None, this.starport_canvas,
     )
-    # TODO:
-    # this.fleetcarrier_overlay = FleetCarrierPadsOverlay(
-    #     this.overlay, this.backward, this.over_radius, this.over_center_x, this.over_center_y,
-    #     sw, sh, this.over_ms_delay, this.over_color_stn, this.over_color_pad, this.over_ttl,
-    #     None, this.fleetcarrier_canvas,
-    # )
+    this.fleetcarrier_overlay = FleetCarrierPadsOverlay(
+        this.overlay, this.backward, this.over_radius, this.over_center_x, this.over_center_y,
+        sw, sh, this.over_ms_delay, this.over_color_stn, this.over_color_pad, this.over_ttl,
+        None, this.fleetcarrier_canvas,
+    )
 
     this.prefs_radius = tk.IntVar(value=this.over_radius)
     this.prefs_center_x = tk.IntVar(value=this.over_center_x)
@@ -210,7 +209,7 @@ def get_overlay_prefs(parent):
 
 def try_overlay():
     # test for EDMC Overlay
-    if this.use_overlay:
+    if this.use_overlay and this.overlay is None:
         try:
             this.overlay = Overlay(logger)
             this.overlay.connect()
@@ -370,18 +369,17 @@ def prefs_changed(cmdr, is_beta):
     if not this.use_overlay:
         this.overlay = None
         this.starport_overlay.hide_overlay()
-        # TODO: this.fleetcarrier_overlay.hide_overlay()
+        this.fleetcarrier_overlay.hide_overlay()
     this.starport_overlay.config(
         overlay=this.overlay, backward=this.backward, radius=this.over_radius,
         center_x=this.over_center_x, center_y=this.over_center_y,
         screen_w=float(sw), screen_h=float(sh), ms_delay=this.over_ms_delay,
     )
-    # TODO:
-    # this.fleetcarrier_overlay.config(
-    #     overlay=this.overlay, backward=this.backward, radius=this.over_radius,
-    #     center_x=this.over_center_x, center_y=this.over_center_y,
-    #     screen_w=float(sw), screen_h=float(sh), ms_delay=this.over_ms_delay,
-    # )
+    this.fleetcarrier_overlay.config(
+        overlay=this.overlay, backward=this.backward, radius=this.over_radius,
+        center_x=this.over_center_x, center_y=this.over_center_y,
+        screen_w=float(sw), screen_h=float(sh), ms_delay=this.over_ms_delay,
+    )
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     if entry['event'] == 'DockingGranted':
@@ -396,7 +394,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             this.curr_station_type = this.TYPE_FLEETCARRIER
             is_squadroncarrier = len(entry["StationName"]) == 4
             this.fleetcarrier_canvas.config(cur_pad=pad, squadron_carrier=is_squadroncarrier)
-            # TODO: this.fleetcarrier_overlay.config(cur_pad=pad)
+            this.fleetcarrier_overlay.config(cur_pad=pad, squadron_carrier=is_squadroncarrier)
             show_station(True)
         else:
             this.curr_station_type = None
@@ -424,7 +422,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
                 show_station(True)
             else:
                 show_station(False)
-        elif entry["Message"].startswith("!fcpad"):
+        elif entry["Message"].startswith(("!fcpad", "!scpad")):
             if this.curr_station_type != this.TYPE_FLEETCARRIER:
                 show_station(False)
             this.curr_station_type = this.TYPE_FLEETCARRIER
@@ -433,12 +431,9 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             except ValueError:
                 pad = None
             if pad:
-                is_squadroncarrier = False
-                if pad < 0:
-                    is_squadroncarrier = True
-                    pad = -pad
+                is_squadroncarrier = entry["Message"].startswith("!scpad")
                 this.fleetcarrier_canvas.config(cur_pad=pad, squadron_carrier=is_squadroncarrier)
-                # TODO: this.fleetcarrier_overlay.config(cur_pad=pad)
+                this.fleetcarrier_overlay.config(cur_pad=pad, squadron_carrier=is_squadroncarrier)
                 show_station(True)
             else:
                 show_station(False)
