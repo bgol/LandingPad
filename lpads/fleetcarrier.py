@@ -16,6 +16,7 @@ class FleetCarrierPads(LandingPads):
             max_with=0, squadron_carrier=False, **kwargs
     ):
         super().__init__(parent, cur_pad, backward, col_stn, col_pad, max_with, **kwargs)
+        self.strong = 1
         self.squadron_carrier = squadron_carrier
         self.update_values()
         self.calc_unit_length()
@@ -69,13 +70,13 @@ class FleetCarrierPads(LandingPads):
         self.calc_unit_length()
         self.config(width=self.width, height=self.height)
 
-    def get_pad_boxes(self, cx, cy):
+    def get_pad_boxes(self):
         return [
             (
-                cx + x1 * self.unit_length,
-                cy + y1 * self.unit_length,
-                cx + x2 * self.unit_length,
-                cy + y2 * self.unit_length,
+                self.center_x + x1 * self.unit_length,
+                self.center_y + y1 * self.unit_length,
+                self.center_x + x2 * self.unit_length,
+                self.center_y + y2 * self.unit_length,
             )
             for (x1, y1, x2, y2) in self.pad_list
         ]
@@ -88,16 +89,19 @@ class FleetCarrierPads(LandingPads):
         self.center_x = self.width / 2
         self.center_y = self.height / 2
         testval = abs(self.unit_length)
-        strong = 4 - (testval < 16) - (testval < 9) - (testval < 4)
-        for x1, y1, x2, y2 in self.get_pad_boxes(self.center_x, self.center_y):
-            self.create_rectangle(x1, y1, x2, y2, width=strong, outline=self.col_stn, fill='')
+        self.strong = 4 - (testval < 16) - (testval < 9) - (testval < 4)
+        for x1, y1, x2, y2 in self.get_pad_boxes():
+            self.create_rectangle(x1, y1, x2, y2, width=self.strong, outline=self.col_stn, fill='')
         self.stn_obj = True
 
-    def get_pad_center(self, pad):
+    def get_pad_rectangle(self, pad):
         x1, y1, x2, y2 = self.pad_list[pad % self.pad_count]
-        cx = (x1 + x2) / 2
-        cy = (y1 + y2) / 2
-        return (cx, cy)
+        return (
+            self.center_x + x1 * self.unit_length,
+            self.center_y + y1 * self.unit_length,
+            self.center_x + x2 * self.unit_length,
+            self.center_y + y2 * self.unit_length
+        )
 
     def draw_pad(self, pad):
         if self.pad_obj:
@@ -107,12 +111,8 @@ class FleetCarrierPads(LandingPads):
             self.draw_station()
         self.cur_pad = pad
         if pad:
-            cx, cy = self.get_pad_center(pad-1)
-            dot = 2 if ((pad-1) % 16) < 8 else 1
-            ov = dot * self.unit_length
-            rx = self.center_x + cx * self.unit_length
-            ry = self.center_y + cy * self.unit_length
-            self.pad_obj = self.create_oval(rx-ov, ry-ov, rx+ov, ry+ov, fill=self.col_pad)
+            x1, y1, x2, y2 = self.get_pad_rectangle(pad-1)
+            self.pad_obj = self.create_rectangle(x1, y1, x2, y2, width=self.strong, outline=self.col_stn, fill=self.col_pad)
 
 class FleetCarrierPadsOverlay():
 
