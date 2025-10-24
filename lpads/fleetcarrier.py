@@ -1,3 +1,5 @@
+from enum import Enum
+
 from .base import LandingPads
 from .misc import round_away, calc_aspect_x
 from .overlay import VIRTUAL_WIDTH, VIRTUAL_HEIGHT
@@ -7,16 +9,22 @@ FLEETCARRIER_BOX_WIDTH = 50
 FLEETCARRIER_BOX_HEIGHT = 76
 SQUADRON_CARRIER_OFFSET = FLEETCARRIER_BOX_WIDTH / 2 + 2
 
+
+class CarrierType(Enum):
+    FleetCarrier = 1
+    SquadronCarrier = 2
+    ColonisationShip = 3
+
 class FleetCarrierPads(LandingPads):
 
     pad_list: list[tuple[int, int]] = []
 
     def __init__(
             self, parent, cur_pad=None, backward=False, col_stn="black", col_pad="blue",
-            max_with=0, squadron_carrier=False, **kwargs
+            max_with=0, carrier_type=CarrierType.FleetCarrier, **kwargs
     ):
         self.strong = 1
-        self.squadron_carrier = squadron_carrier
+        self.carrier_type = carrier_type
         super().__init__(parent, cur_pad, backward, col_stn, col_pad, max_with, **kwargs)
         self.update_values()
         self.calc_unit_length()
@@ -39,29 +47,29 @@ class FleetCarrierPads(LandingPads):
                     self.pad_list.append((x+x_offset, y, x+x_offset+7, y+11))
             # 4 small pads
             y = 0
-            if self.squadron_carrier:
-                small_pads_list = (-25, -19, 14, 20)
-            else:
+            if self.carrier_type == CarrierType.FleetCarrier:
                 small_pads_list = (-25, 14, 20, -19)
+            else:
+                small_pads_list = (-25, -19, 14, 20)
             for x in small_pads_list:
                 self.pad_list.append((x+x_offset, y, x+x_offset+5, y+6))
         self.pad_count = len(self.pad_list)
 
     def update_values(self):
-        if self.squadron_carrier:
+        if self.carrier_type == CarrierType.SquadronCarrier:
             self.calc_values([SQUADRON_CARRIER_OFFSET, -SQUADRON_CARRIER_OFFSET])
         else:
             self.calc_values()
 
     def config(self, **kwargs):
-        if "squadron_carrier" in kwargs:
-            self.squadron_carrier = kwargs.pop("squadron_carrier")
+        if "carrier_type" in kwargs:
+            self.carrier_type = kwargs.pop("carrier_type")
             self.update_values()
             self.calc_unit_length()
         super().config(**kwargs)
 
     def calc_unit_length(self):
-        if self.squadron_carrier:
+        if self.carrier_type == CarrierType.SquadronCarrier:
             ux = ((self.width - 4) / (2 * SQUADRON_CARRIER_OFFSET + FLEETCARRIER_BOX_WIDTH))
         else:
             ux = ((self.width - 4) / FLEETCARRIER_BOX_WIDTH)
@@ -124,12 +132,13 @@ class FleetCarrierPadsOverlay():
     id_list_station: list = []
     config_attr_set = {
         "overlay", "backward", "radius", "center_x", "center_y", "ms_delay",
-        "color_stn", "color_pad", "ttl", "cur_pad", "starport_canvas", "squadron_carrier",
+        "color_stn", "color_pad", "ttl", "cur_pad", "fleetcarrier_canvas", "carrier_type",
     }
 
     def __init__(
             self, overlay, backward, radius, center_x, center_y, screen_w, screen_h,
-            ms_delay, color_stn, color_pad, ttl, cur_pad, fleetcarrier_canvas, squadron_carrier=False,
+            ms_delay, color_stn, color_pad, ttl, cur_pad, fleetcarrier_canvas,
+            carrier_type=CarrierType.FleetCarrier,
     ):
         self.overlay = overlay
         self.backward = backward
@@ -147,7 +156,7 @@ class FleetCarrierPadsOverlay():
         self.ttl = ttl
         self.cur_pad = cur_pad
         self.fleetcarrier_canvas = fleetcarrier_canvas
-        self.squadron_carrier = squadron_carrier
+        self.carrier_type = carrier_type
         self.show = False
         self.calc_unit_length()
 
@@ -163,7 +172,7 @@ class FleetCarrierPadsOverlay():
         return self.radius * 2
 
     def calc_unit_length(self):
-        if self.squadron_carrier:
+        if self.carrier_type == CarrierType.SquadronCarrier:
             ux = int(self.diameter / (2 * SQUADRON_CARRIER_OFFSET + FLEETCARRIER_BOX_WIDTH))
         else:
             ux = int(self.diameter / FLEETCARRIER_BOX_WIDTH)
@@ -179,7 +188,7 @@ class FleetCarrierPadsOverlay():
             self.max_x = round_away((VIRTUAL_WIDTH+31) / self.aspect_x)
             self.max_y = round_away(VIRTUAL_HEIGHT+17)
 
-        if any(val in kwargs for val in ("radius", "squadron_carrier")):
+        if any(val in kwargs for val in ("radius", "carrier_type")):
             self.calc_unit_length()
 
         if self.show:

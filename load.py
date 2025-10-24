@@ -14,14 +14,15 @@ from ttkHyperlinkLabel import HyperlinkLabel
 from config import appname, config
 
 from lpads import (
-    Overlay, StarportPads, StarportPadsOverlay, FleetCarrierPads, FleetCarrierPadsOverlay
+    Overlay, StarportPads, StarportPadsOverlay,
+    CarrierType, FleetCarrierPads, FleetCarrierPadsOverlay
 )
 
 
 PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
-__version_info__ = (2, 3, 5)
+__version_info__ = (2, 4, 0)
 __version__ = ".".join(map(str, __version_info__))
 
 PLUGIN_URL = 'https://github.com/bgol/LandingPad'
@@ -35,6 +36,17 @@ PREFSNAME_USE_OVERLAY = "landingpad_use_overlay"
 PREFSNAME_MS_DELAY = "landingpad_ms_delay"
 OPTIONS_GREENSIDE = ["right", "left"]
 MAX_WIDTH_MINIMUM = 150
+
+SYSTEMCOLONISATIONSHIP_STN_NAME = "$EXT_PANEL_ColonisationShip"
+COLONISATIONSHIP_TYP_NAME = "colonisationship"
+TRAILBLAZER_SHIP_MIDS = {
+    129032183, # Trailblazer Dream
+    129032439, # Trailblazer Song
+    129032695, # Trailblazer Wish
+    129032951, # Trailblazer Star
+    129033207, # Trailblazer Promise
+    129033463, # Trailblazer Faith
+}
 
 class This():
     """For holding module globals"""
@@ -59,7 +71,7 @@ class This():
     curr_show: bool = None
     hide_events: set[str] = {'Docked', 'DockingCancelled', 'DockingTimeout', 'StartJump', 'Shutdown'}
     starport_types: set[str] = {'bernal', 'coriolis', 'orbis', 'asteroidbase', 'ocellus'}
-    fleetcarrier_types: set[str] = {'fleetcarrier'}
+    fleetcarrier_types: set[str] = {'fleetcarrier', COLONISATIONSHIP_TYP_NAME}
     curr_station_type: str | None = None
     TYPE_STARPORT: str = "starport"
     TYPE_FLEETCARRIER: str = "fleetcarrier"
@@ -381,9 +393,21 @@ def prefs_changed(cmdr, is_beta):
         screen_w=float(sw), screen_h=float(sh), ms_delay=this.over_ms_delay,
     )
 
+# ED Bug: these ships are reported as 'SurfaceStation'
+# you can identify them by name or market id, afaik
+def check_for_colonisationship(typ: str, market_id: int, stn_name: str) -> bool:
+    if typ in {"surfacestation", "unknown"}:
+        return (
+            (market_id in TRAILBLAZER_SHIP_MIDS) or
+            (stn_name.startswith(SYSTEMCOLONISATIONSHIP_STN_NAME))
+        )
+    return False
+
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     if entry['event'] == 'DockingGranted':
         typ = entry.get('StationType', 'Unknown').lower()
+        if check_for_colonisationship(typ, entry["MarketID"], entry["StationName"]):
+            typ = COLONISATIONSHIP_TYP_NAME
         pad = int(entry['LandingPad'])
         if typ in this.starport_types:
             this.curr_station_type = this.TYPE_STARPORT
@@ -392,9 +416,14 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             show_station(True)
         elif typ in this.fleetcarrier_types:
             this.curr_station_type = this.TYPE_FLEETCARRIER
-            is_squadroncarrier = len(entry["StationName"]) == 4
-            this.fleetcarrier_canvas.config(cur_pad=pad, squadron_carrier=is_squadroncarrier)
-            this.fleetcarrier_overlay.config(cur_pad=pad, squadron_carrier=is_squadroncarrier)
+            if typ == COLONISATIONSHIP_TYP_NAME:
+                carrier_type = CarrierType.ColonisationShip
+            elif len(entry["StationName"]) == 4:
+                carrier_type = CarrierType.SquadronCarrier
+            else:
+                carrier_type = CarrierType.FleetCarrier
+            this.fleetcarrier_canvas.config(cur_pad=pad, carrier_type=carrier_type)
+            this.fleetcarrier_overlay.config(cur_pad=pad, carrier_type=carrier_type)
             show_station(True)
         else:
             this.curr_station_type = None
@@ -422,18 +451,23 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
                 show_station(True)
             else:
                 show_station(False)
-        elif entry["Message"].startswith(("!fcpad", "!scpad")):
+        elif entry["Message"].startswith(("!fcpad", "!scpad", "!cspad")):
             if this.curr_station_type != this.TYPE_FLEETCARRIER:
                 show_station(False)
             this.curr_station_type = this.TYPE_FLEETCARRIER
+            if entry["Message"].startswith("!f"):
+                carrier_type = CarrierType.FleetCarrier
+            elif entry["Message"].startswith("!s"):
+                carrier_type = CarrierType.SquadronCarrier
+            else:
+                carrier_type = CarrierType.ColonisationShip
             try:
                 pad = int(entry["Message"][6:])
             except ValueError:
                 pad = None
             if pad:
-                is_squadroncarrier = entry["Message"].startswith("!scpad")
-                this.fleetcarrier_canvas.config(cur_pad=pad, squadron_carrier=is_squadroncarrier)
-                this.fleetcarrier_overlay.config(cur_pad=pad, squadron_carrier=is_squadroncarrier)
+                this.fleetcarrier_canvas.config(cur_pad=pad, carrier_type=carrier_type)
+                this.fleetcarrier_overlay.config(cur_pad=pad, carrier_type=carrier_type)
                 show_station(True)
             else:
                 show_station(False)
