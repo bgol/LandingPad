@@ -15,9 +15,9 @@ class FleetCarrierPads(LandingPads):
             self, parent, cur_pad=None, backward=False, col_stn="black", col_pad="blue",
             max_with=0, squadron_carrier=False, **kwargs
     ):
-        super().__init__(parent, cur_pad, backward, col_stn, col_pad, max_with, **kwargs)
         self.strong = 1
         self.squadron_carrier = squadron_carrier
+        super().__init__(parent, cur_pad, backward, col_stn, col_pad, max_with, **kwargs)
         self.update_values()
         self.calc_unit_length()
 
@@ -39,7 +39,11 @@ class FleetCarrierPads(LandingPads):
                     self.pad_list.append((x+x_offset, y, x+x_offset+4, y+8))
             # 4 small pads
             y = 1
-            for x in (-17, 10, 14, -13):
+            if self.squadron_carrier:
+                small_pads_list = (-17, -13, 10, 14)
+            else:
+                small_pads_list = (-17, 10, 14, -13)
+            for x in small_pads_list:
                 self.pad_list.append((x+x_offset, y, x+x_offset+3, y+4))
         self.pad_count = len(self.pad_list)
 
