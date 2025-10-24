@@ -3,8 +3,8 @@ from .misc import round_away, calc_aspect_x
 from .overlay import VIRTUAL_WIDTH, VIRTUAL_HEIGHT
 
 
-FLEETCARRIER_BOX_WIDTH = 34
-FLEETCARRIER_BOX_HEIGHT = 54
+FLEETCARRIER_BOX_WIDTH = 50
+FLEETCARRIER_BOX_HEIGHT = 76
 SQUADRON_CARRIER_OFFSET = FLEETCARRIER_BOX_WIDTH / 2 + 2
 
 class FleetCarrierPads(LandingPads):
@@ -30,21 +30,21 @@ class FleetCarrierPads(LandingPads):
         x_offset_list = x_offset_list or [0]
         for x_offset in x_offset_list:
             # 8 large pads
-            for y in (15, 1, -13, -27):
-                for x in (-9, 1):
-                    self.pad_list.append((x+x_offset, y, x+x_offset+8, y+12))
+            for y in (22, 2, -18, -38):
+                for x in (-12, 2):
+                    self.pad_list.append((x+x_offset, y, x+x_offset+10, y+16))
             # 4 medium pads
-            for x in (-15, 11):
-                for y in (17, 7):
-                    self.pad_list.append((x+x_offset, y, x+x_offset+4, y+8))
+            for x in (-22, 15):
+                for y in (25, 10):
+                    self.pad_list.append((x+x_offset, y, x+x_offset+7, y+11))
             # 4 small pads
-            y = 1
+            y = 0
             if self.squadron_carrier:
-                small_pads_list = (-17, -13, 10, 14)
+                small_pads_list = (-25, -19, 14, 20)
             else:
-                small_pads_list = (-17, 10, 14, -13)
+                small_pads_list = (-25, 14, 20, -19)
             for x in small_pads_list:
-                self.pad_list.append((x+x_offset, y, x+x_offset+3, y+4))
+                self.pad_list.append((x+x_offset, y, x+x_offset+5, y+6))
         self.pad_count = len(self.pad_list)
 
     def update_values(self):
