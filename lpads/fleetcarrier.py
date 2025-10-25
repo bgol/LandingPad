@@ -5,7 +5,7 @@ from .misc import round_away, calc_aspect_x
 from .overlay import VIRTUAL_WIDTH, VIRTUAL_HEIGHT
 
 
-FLEETCARRIER_BOX_WIDTH = 50
+FLEETCARRIER_BOX_WIDTH = 48
 FLEETCARRIER_BOX_HEIGHT = 76
 SQUADRON_CARRIER_OFFSET = FLEETCARRIER_BOX_WIDTH / 2 + 2
 
@@ -48,11 +48,11 @@ class FleetCarrierPads(LandingPads):
             # 4 small pads
             y = 0
             if self.carrier_type == CarrierType.FleetCarrier:
-                small_pads_list = (-25, 14, 20, -19)
+                small_pads_list = (-24, 14, 20, -18)
             else:
-                small_pads_list = (-25, -19, 14, 20)
+                small_pads_list = (-24, -18, 14, 20)
             for x in small_pads_list:
-                self.pad_list.append((x+x_offset, y, x+x_offset+5, y+6))
+                self.pad_list.append((x+x_offset, y, x+x_offset+4, y+6))
         self.pad_count = len(self.pad_list)
 
     def update_values(self):
