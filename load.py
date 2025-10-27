@@ -22,7 +22,7 @@ from lpads import (
 PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
-__version_info__ = (2, 4, 1)
+__version_info__ = (2, 4, 2)
 __version__ = ".".join(map(str, __version_info__))
 
 PLUGIN_URL = 'https://github.com/bgol/LandingPad'
@@ -118,6 +118,15 @@ class This():
         )))
 
 this = This()
+
+CMD_MESSAGE_MAP = {
+    "!sppad": (this.TYPE_STARPORT, None),
+    "!fcpad": (this.TYPE_FLEETCARRIER, CarrierType.FleetCarrier),
+    "!scpad": (this.TYPE_FLEETCARRIER, CarrierType.SquadronCarrier),
+    "!cspad": (this.TYPE_FLEETCARRIER, CarrierType.ColonisationShip),
+}
+CMD_MESSAGE_LEN = 6    # all commands must have the same length
+CMD_MESSAGE_STARTSWITH = tuple(CMD_MESSAGE_MAP.keys())
 
 # For compatibility with pre-5.0.0
 if not hasattr(config, "get_int"):
@@ -436,38 +445,22 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             # only way I know, if the user logged out
             show_station(False)
             this.curr_station_type = None
-    elif entry["event"] == "SendText":
-        if entry["Message"].startswith("!pad"):
-            if this.curr_station_type != this.TYPE_STARPORT:
-                show_station(False)
-            this.curr_station_type = this.TYPE_STARPORT
-            try:
-                pad = int(entry["Message"][4:])
-            except ValueError:
-                pad = None
-            if pad:
+    elif entry["event"] == "SendText" and entry["Message"].startswith(CMD_MESSAGE_STARTSWITH):
+        station_type, carrier_type = CMD_MESSAGE_MAP.get(entry["Message"][:CMD_MESSAGE_LEN])
+        if this.curr_station_type != station_type:
+            show_station(False)
+        this.curr_station_type = station_type
+        try:
+            pad = int(entry["Message"][CMD_MESSAGE_LEN:])
+        except ValueError:
+            pad = None
+        if pad:
+            if this.curr_station_type == this.TYPE_STARPORT:
                 this.starport_canvas.config(cur_pad=pad)
                 this.starport_overlay.config(cur_pad=pad)
-                show_station(True)
             else:
-                show_station(False)
-        elif entry["Message"].startswith(("!fcpad", "!scpad", "!cspad")):
-            if this.curr_station_type != this.TYPE_FLEETCARRIER:
-                show_station(False)
-            this.curr_station_type = this.TYPE_FLEETCARRIER
-            if entry["Message"].startswith("!f"):
-                carrier_type = CarrierType.FleetCarrier
-            elif entry["Message"].startswith("!s"):
-                carrier_type = CarrierType.SquadronCarrier
-            else:
-                carrier_type = CarrierType.ColonisationShip
-            try:
-                pad = int(entry["Message"][6:])
-            except ValueError:
-                pad = None
-            if pad:
                 this.fleetcarrier_canvas.config(cur_pad=pad, carrier_type=carrier_type)
                 this.fleetcarrier_overlay.config(cur_pad=pad, carrier_type=carrier_type)
-                show_station(True)
-            else:
-                show_station(False)
+            show_station(True)
+        else:
+            show_station(False)
