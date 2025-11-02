@@ -3,7 +3,7 @@ import math
 import tkinter as tk
 
 from .base import LandingPads
-from .misc import round_away, calc_aspect_x
+from .misc import round_away
 
 
 class StarportPads(LandingPads):
@@ -153,7 +153,11 @@ class StarportPadsOverlay():
         self.radius = radius
         self.center_x = center_x
         self.center_y = center_y
-        self.aspect_x = calc_aspect_x(screen_w, screen_h)
+        if self.overlay is not None:
+            self.overlay.config(screen_w, screen_h)
+            self.aspect_x = self.overlay.calc_aspect_x(screen_w, screen_h)
+        else:
+            self.aspect_x = 1.0
         self.ms_delay = ms_delay
         self.color_stn = color_stn
         self.color_pad = color_pad
@@ -170,7 +174,11 @@ class StarportPadsOverlay():
             setattr(self, attr_name, kwargs[attr_name])
 
         if all(val in kwargs for val in ("screen_w", "screen_h")):
-            self.aspect_x = calc_aspect_x(kwargs["screen_w"], kwargs["screen_h"])
+            if self.overlay is not None:
+                self.overlay.config(kwargs["screen_w"], kwargs["screen_h"])
+                self.aspect_x = self.overlay.calc_aspect_x(kwargs["screen_w"], kwargs["screen_h"])
+            else:
+                self.aspect_x = 1.0
 
         if self.show:
             if len(kwargs) == 1 and "cur_pad" in kwargs:

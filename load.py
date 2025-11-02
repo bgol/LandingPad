@@ -22,7 +22,7 @@ from lpads import (
 PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
-__version_info__ = (2, 5, "1-dev")
+__version_info__ = (2, 5, "2-dev")
 __version__ = ".".join(map(str, __version_info__))
 
 PLUGIN_URL = 'https://github.com/bgol/LandingPad'
@@ -209,6 +209,8 @@ def get_overlay_prefs(parent):
         sw = float(parent.winfo_screenwidth())
         sh = float(parent.winfo_screenheight())
 
+    try_overlay()
+
     this.starport_overlay = StarportPadsOverlay(
         this.overlay, this.backward, this.over_radius, this.over_center_x, this.over_center_y,
         sw, sh, this.over_ms_delay, this.over_color_stn, this.over_color_pad, this.over_ttl,
@@ -281,7 +283,6 @@ def plugin_app(parent):
     # keep the station size in sync
     frame.bind("<Configure>", frame_resize)
 
-    try_overlay()
     get_overlay_prefs(parent)
 
     # don't show the station

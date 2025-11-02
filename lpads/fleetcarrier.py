@@ -1,8 +1,7 @@
 from enum import Enum
 
 from .base import LandingPads
-from .misc import round_away, calc_aspect_x
-from .overlay import VIRTUAL_WIDTH, VIRTUAL_HEIGHT
+from .misc import round_away
 
 
 FLEETCARRIER_BOX_WIDTH = 48
@@ -145,11 +144,14 @@ class FleetCarrierPadsOverlay():
         self.radius = radius
         self.center_x = center_x
         self.center_y = center_y
-        self.screen_w = screen_w
-        self.screen_h = screen_h
-        self.aspect_x = calc_aspect_x(screen_w, screen_h)
-        self.max_x = round_away((VIRTUAL_WIDTH+31) / self.aspect_x)
-        self.max_y = round_away(VIRTUAL_HEIGHT+17)
+        if self.overlay is not None:
+            self.overlay.config(screen_w, screen_h)
+            self.aspect_x = self.overlay.calc_aspect_x(screen_w, screen_h)
+            self.max_x, self.max_y = self.overlay.calc_max_xy(self.aspect_x)
+        else:
+            self.aspect_x = 1.0
+            self.max_x = screen_w
+            self.max_y = screen_h
         self.ms_delay = ms_delay
         self.color_stn = color_stn
         self.color_pad = color_pad
@@ -184,9 +186,14 @@ class FleetCarrierPadsOverlay():
             setattr(self, attr_name, kwargs[attr_name])
 
         if all(val in kwargs for val in ("screen_w", "screen_h")):
-            self.aspect_x = calc_aspect_x(kwargs["screen_w"], kwargs["screen_h"])
-            self.max_x = round_away((VIRTUAL_WIDTH+31) / self.aspect_x)
-            self.max_y = round_away(VIRTUAL_HEIGHT+17)
+            if self.overlay is not None:
+                self.overlay.config(kwargs["screen_w"], kwargs["screen_h"])
+                self.aspect_x = self.overlay.calc_aspect_x(kwargs["screen_w"], kwargs["screen_h"])
+                self.max_x, self.max_y = self.overlay.calc_max_xy(self.aspect_x)
+            else:
+                self.aspect_x = 1.0
+                self.max_x = kwargs["screen_w"]
+                self.max_y = kwargs["screen_h"]
 
         if any(val in kwargs for val in ("radius", "carrier_type")):
             self.calc_unit_length()
