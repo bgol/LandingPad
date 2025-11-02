@@ -2,6 +2,14 @@ import json
 import time
 import socket
 
+try:
+    from EDMCOverlay import edmcoverlay
+except ImportError:
+    try:
+        from edmcoverlay import edmcoverlay
+    except ImportError:
+        edmcoverlay = None
+
 # EDMC Overlay fixed settings
 SERVER_ADDRESS = "127.0.0.1"
 SERVER_PORT = 5010
@@ -21,13 +29,25 @@ class Overlay(object):
         self.port = port
         self.conn = None
         self.logger = logger
+        self._overlay = None
+        if edmcoverlay is not None:
+            if hasattr(edmcoverlay.Overlay, "send_command"):
+                logger.info("most likely using edmcoverlay for linux")
+                self._overlay = edmcoverlay.Overlay()
+            elif hasattr(edmcoverlay.Overlay, "_emit_payload"):
+                logger.info("most likely using EDMC-ModernOverlay")
+                self._overlay = edmcoverlay.Overlay()
+            else:
+                logger.info("fallback to use original EDMCOverlay")
 
     def connect(self):
         """
         open the connection
         :return:
         """
-        if self.conn is None:
+        if self._overlay is not None:
+            self._overlay.connect()
+        elif self.conn is None:
             try:
                 self.conn = socket.socket()
                 self.conn.connect((self.server, self.port))
@@ -41,7 +61,12 @@ class Overlay(object):
         :param msg:
         :return:
         """
-        if self.conn:
+        if self._overlay is not None:
+            self._overlay.send_raw(msg)
+            if delay:
+                delay = min(max(delay, 0), 500)
+                time.sleep(float(delay) / 1000.0)
+        elif self.conn:
             try:
                 self.conn.send(json.dumps(msg).encode())
                 self.conn.send(b"\n")
