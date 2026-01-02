@@ -22,7 +22,7 @@ from lpads import (
 PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
-__version_info__ = (2, 5, 3)
+__version_info__ = (2, 5, 4)
 __version__ = ".".join(map(str, __version_info__))
 
 PLUGIN_URL = 'https://github.com/bgol/LandingPad'
@@ -184,8 +184,8 @@ def show_station(show):
 def get_overlay_prefs(parent):
 
     this.use_overlay = config.get_bool(PREFSNAME_USE_OVERLAY, default=False)
-    if config.get_str(PREFSNAME_MS_DELAY) is not None:
-        this.over_ms_delay = int(config.get_str(PREFSNAME_MS_DELAY))
+    if config.get_str(PREFSNAME_MS_DELAY):
+        this.over_ms_delay = config.get_int(PREFSNAME_MS_DELAY)
 
     split_me = config.get_str(PREFSNAME_STN_OVERLAY)
     if split_me:
