@@ -280,7 +280,7 @@ class FleetCarrierPadsOverlay():
             "w": self.aspect(w),
             "h": h,
         }
-        self.id_list_station.append(msg["id"])
+        self.id_list_pad.append(msg["id"])
         self.overlay.send_raw(msg, delay=self.ms_delay)
 
     def hide_overlay(self):
