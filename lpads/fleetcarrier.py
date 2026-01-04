@@ -176,11 +176,11 @@ class FleetCarrierPadsOverlay():
 
     def calc_unit_length(self):
         if self.carrier_type == CarrierType.SquadronCarrier:
-            ux = int(self.diameter / (2 * SQUADRON_CARRIER_OFFSET + FLEETCARRIER_BOX_WIDTH))
+            ux = self.diameter / (2 * SQUADRON_CARRIER_OFFSET + FLEETCARRIER_BOX_WIDTH)
         else:
-            ux = int(self.diameter / FLEETCARRIER_BOX_WIDTH)
-        uy = int(self.diameter / FLEETCARRIER_BOX_HEIGHT)
-        self._unit_length = max(ux, uy, 1)
+            ux = self.diameter / FLEETCARRIER_BOX_WIDTH
+        uy = self.diameter / FLEETCARRIER_BOX_HEIGHT
+        self._unit_length = max(min(ux, uy), 1)
 
     def config(self, **kwargs):
         for attr_name in (self.config_attr_set & kwargs.keys()):
@@ -217,10 +217,10 @@ class FleetCarrierPadsOverlay():
         min_x = max_x = self.center_x
         min_y = max_y = self.center_y
         for x1, y1, x2, y2 in self.fleetcarrier_canvas.pad_list:
-            for check_x in (int(self.center_x + x * self.unit_length) for x in (x1, x2)):
+            for check_x in (round_away(self.center_x + x * self.unit_length) for x in (x1, x2)):
                 min_x = min(min_x, check_x)
                 max_x = max(max_x, check_x)
-            for check_y in (int(self.center_y + y * self.unit_length) for y in (y1, y2)):
+            for check_y in (round_away(self.center_y + y * self.unit_length) for y in (y1, y2)):
                 min_y = min(min_y, check_y)
                 max_y = max(max_y, check_y)
         if min_x < 0:
@@ -235,10 +235,10 @@ class FleetCarrierPadsOverlay():
             self.center_y -= (max_y - self.max_y)
 
     def convert_coords_to_rect(self, x1, y1, x2, y2):
-        x1 = self.center_x + x1 * self.unit_length
-        y1 = self.center_y + y1 * self.unit_length
-        x2 = self.center_x + x2 * self.unit_length
-        y2 = self.center_y + y2 * self.unit_length
+        x1 = self.aspect(self.center_x + x1 * self.unit_length)
+        y1 = round_away(self.center_y + y1 * self.unit_length)
+        x2 = self.aspect(self.center_x + x2 * self.unit_length)
+        y2 = round_away(self.center_y + y2 * self.unit_length)
         return min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1)
 
     def draw_overlay_station(self):
@@ -252,10 +252,8 @@ class FleetCarrierPadsOverlay():
                 "shape": "rect",
                 "color": self.color_stn,
                 "ttl": self.ttl,
-                "x": self.aspect(x),
-                "y": y,
-                "w": self.aspect(w),
-                "h": h,
+                "x": x, "y": y,
+                "w": w, "h": h,
             }
             self.id_list_station.append(msg["id"])
             self.overlay.send_raw(msg, delay=self.ms_delay)
@@ -278,10 +276,8 @@ class FleetCarrierPadsOverlay():
             "color": self.color_pad,
             "fill": self.color_pad,
             "ttl": self.ttl,
-            "x": self.aspect(x),
-            "y": y,
-            "w": self.aspect(w),
-            "h": h,
+            "x": x, "y": y,
+            "w": w, "h": h,
         }
         self.id_list_pad.append(msg["id"])
         self.overlay.send_raw(msg, delay=self.ms_delay)
