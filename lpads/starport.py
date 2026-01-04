@@ -164,6 +164,7 @@ class StarportPadsOverlay():
         self.ttl = ttl
         self.cur_pad = cur_pad
         self.starport_canvas = starport_canvas
+        self.id_prefix = f"LandingPad-Starport-"
         self.show = False
 
     def aspect(self, x):
@@ -207,7 +208,7 @@ class StarportPadsOverlay():
                 for (x, y) in polyPoints + [polyPoints[0]]
             ]
             msg = {
-                "id": "shell-%d" % p,
+                "id": f"{self.id_prefix}shell-{p}",
                 "color": self.color_stn,
                 "shape": "vect",
                 "ttl": self.ttl,
@@ -221,7 +222,7 @@ class StarportPadsOverlay():
         vectorTo = self.starport_canvas.get_poly_points(self.center_x, self.center_y, self.radius * self.starport_canvas.shell_scale[-1])
         for l, ((x1, y1), (x2, y2)) in enumerate(zip(vectorFrom, vectorTo)):
             msg = {
-                "id": "line-%d" % l,
+                "id": f"{self.id_prefix}line-{l}",
                 "color": self.color_stn,
                 "shape": "vect",
                 "ttl": self.ttl,
@@ -248,8 +249,8 @@ class StarportPadsOverlay():
             colorRight = "red" if self.backward else "green"
             colorLeft = "green" if self.backward else "red"
             for (id, color, vector) in [
-                (f"toaster-right-{ds}", colorRight, vectorRight),
-                (f"toaster-left-{ds}", colorLeft, vectorLeft),
+                (f"{self.id_prefix}toaster-right-{ds}", colorRight, vectorRight),
+                (f"{self.id_prefix}toaster-left-{ds}", colorLeft, vectorLeft),
             ]:
                 msg = {
                     "id": id,
@@ -282,7 +283,7 @@ class StarportPadsOverlay():
             x = rx - px // 2
             y = ry - py // 2
             msg = {
-                "id": f"pad-{pad}-{i}",
+                "id": f"{self.id_prefix}pad-{pad}-{i}",
                 "shape": "rect",
                 "color": self.color_pad,
                 "fill": self.color_pad,

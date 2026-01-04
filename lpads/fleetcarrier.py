@@ -159,6 +159,7 @@ class FleetCarrierPadsOverlay():
         self.cur_pad = cur_pad
         self.fleetcarrier_canvas = fleetcarrier_canvas
         self.carrier_type = carrier_type
+        self.id_prefix = f"LandingPad-{carrier_type.name}-"
         self.show = False
         self.calc_unit_length()
 
@@ -184,6 +185,8 @@ class FleetCarrierPadsOverlay():
     def config(self, **kwargs):
         for attr_name in (self.config_attr_set & kwargs.keys()):
             setattr(self, attr_name, kwargs[attr_name])
+            if attr_name == "carrier_type":
+                self.id_prefix = f"LandingPad-{self.carrier_type.name}-"
 
         if all(val in kwargs for val in ("screen_w", "screen_h")):
             if self.overlay is not None:
@@ -245,7 +248,7 @@ class FleetCarrierPadsOverlay():
         for i, (x1, y1, x2, y2) in enumerate(self.fleetcarrier_canvas.pad_list):
             x, y, w, h = self.convert_coords_to_rect(x1, y1, x2, y2)
             msg = {
-                "id": f"station-{i}",
+                "id": f"{self.id_prefix}station-{i}",
                 "shape": "rect",
                 "color": self.color_stn,
                 "ttl": self.ttl,
@@ -270,7 +273,7 @@ class FleetCarrierPadsOverlay():
         x1, y1, x2, y2 = self.fleetcarrier_canvas.pad_list[pad_index]
         x, y, w, h = self.convert_coords_to_rect(x1, y1, x2, y2)
         msg = {
-            "id": f"pad-{pad}",
+            "id": f"{self.id_prefix}pad-{pad}",
             "shape": "rect",
             "color": self.color_pad,
             "fill": self.color_pad,
