@@ -22,7 +22,7 @@ from lpads import (
 PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
-__version_info__ = (2, 5, 7)
+__version_info__ = (2, 5, 7, 1)
 __version__ = ".".join(map(str, __version_info__))
 
 PLUGIN_URL = 'https://github.com/bgol/LandingPad'
@@ -39,8 +39,9 @@ MAX_WIDTH_MINIMUM = 150
 
 SYSTEMCOLONISATIONSHIP_STN_NAME = "$EXT_PANEL_ColonisationShip"
 COLONISATIONSHIP_TYP_NAME = "colonisationship"
-TRAILBLAZER_SHIP_MIDS = {
+COLONISATIONSHIP_MIDS = {
     129032183, # Trailblazer Dream
+    129032283, # Surveyor’s Reach
     129032439, # Trailblazer Song
     129032695, # Trailblazer Wish
     129032951, # Trailblazer Star
@@ -408,7 +409,7 @@ def prefs_changed(cmdr, is_beta):
 def check_for_colonisationship(typ: str, market_id: int, stn_name: str) -> bool:
     if typ in {"surfacestation", "unknown"}:
         return (
-            (market_id in TRAILBLAZER_SHIP_MIDS) or
+            (market_id in COLONISATIONSHIP_MIDS) or
             (stn_name.startswith(SYSTEMCOLONISATIONSHIP_STN_NAME))
         )
     return False
