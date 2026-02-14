@@ -18,6 +18,7 @@ def main():
     file_list = [
         "load.py",
         "README.md",
+        "LICENSE",
         "lpads/__init__.py",
         "lpads/base.py",
         "lpads/fleetcarrier.py",
