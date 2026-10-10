@@ -46,7 +46,8 @@ You will need to re-start EDMC for it to notice the new plugin.
 ## Acknowledgements
 
 [Habitable Zone plugin](https://github.com/Marginal/HabZone) from Jonathan Harris used as template.
-Thanks to @itewk for adding the station/pad colour setting to the gui.
+
+Thanks to [itewk](https://github.com/itewk) for adding the station/pad colour setting to the gui.
 
 ## License
 
