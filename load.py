@@ -7,7 +7,7 @@ import logging
 import os
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, colorchooser
 
 import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
@@ -22,7 +22,7 @@ from lpads import (
 PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
-__version_info__ = (2, 5, 7, 1)
+__version_info__ = (2, 6, 0)
 __version__ = ".".join(map(str, __version_info__))
 
 PLUGIN_URL = 'https://github.com/bgol/LandingPad'
@@ -96,6 +96,8 @@ class This():
     prefs_screen_h: tk.IntVar = None
     prefs_use_over: tk.BooleanVar = None
     prefs_ms_delay: tk.IntVar = None
+    prefs_color_stn: tk.StringVar = None
+    prefs_color_pad: tk.StringVar = None
 
     def __str__(self) -> str:
         return ("\n".join(line for line in ("",
@@ -230,7 +232,9 @@ def get_overlay_prefs(parent):
     this.prefs_screen_h = tk.IntVar(value=int(sh))
     this.prefs_use_over = tk.BooleanVar(value=this.use_overlay)
     this.prefs_ms_delay = tk.IntVar(value=this.over_ms_delay)
-
+    this.prefs_color_stn = tk.StringVar(value=this.over_color_stn)
+    this.prefs_color_pad = tk.StringVar(value=this.over_color_pad)
+    
 def try_overlay():
     # test for EDMC Overlay
     if this.use_overlay and this.overlay is None:
@@ -241,6 +245,38 @@ def try_overlay():
             this.overlay = None
         if not this.overlay:
             logger.warning("EDMC Overlay not available")
+
+def is_valid_color(parent, color: str) -> bool:
+    # validate by constructing a throwaway widget; works for hex and named colors
+    try:
+        w = tk.Label(parent, bg=color)
+        w.destroy()
+        return True
+    except tk.TclError:
+        return False
+
+def pick_color(parent, current: str) -> str | None:
+    # open the color picker; returns hex #RRGGBB or None on cancel
+    initial = None
+    if current:
+        try:
+            if is_valid_color(parent, current):
+                initial = current
+        except Exception:
+            initial = None
+    try:
+        picked = colorchooser.askcolor(color=initial, parent=parent)
+    except tk.TclError:
+        picked = colorchooser.askcolor(parent=parent)
+    if picked is None or picked[1] is None:
+        return None
+    return picked[1]
+
+def pick_into(parent, var: tk.StringVar):
+    # color-picker button command: write the picked color back into the entry
+    val = pick_color(parent, var.get())
+    if val:
+        var.set(val)
 
 def plugin_start3(plugin_dir):
     logger.info(f"{__version__ = }")
@@ -323,22 +359,30 @@ def plugin_prefs(parent, cmdr, is_beta):
     nb.Label(frame, text='Station').grid(row=20, padx=2*PADX, sticky=tk.W)
     nb.Label(frame, text='Radius').grid(row=20, column=1, padx=PADX, sticky=tk.E)
     nb.EntryMenu(frame, textvariable=this.prefs_radius).grid(row=20, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
+    nb.Label(frame, text='Color').grid(row=21, column=1, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
+    nb.EntryMenu(frame, textvariable=this.prefs_color_stn).grid(row=21, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
+    nb.Button(frame, text='Pick', command=lambda: pick_into(frame, this.prefs_color_stn)).grid(row=21, column=3, padx=PADX, pady=PADY, sticky=tk.E)
 
-    nb.Label(frame, text='Center coordinates').grid(row=21, padx=2*PADX, sticky=tk.W)
-    nb.Label(frame, text='X').grid(row=21, column=1, padx=PADX, sticky=tk.E)
-    nb.EntryMenu(frame, textvariable=this.prefs_center_x).grid(row=21, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
-    nb.Label(frame, text='Y').grid(row=22, column=1, padx=PADX, sticky=tk.E)
-    nb.EntryMenu(frame, textvariable=this.prefs_center_y).grid(row=22, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
+    nb.Label(frame, text='Pad').grid(row=22, padx=2*PADX, sticky=tk.W)
+    nb.Label(frame, text='Color').grid(row=22, column=1, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
+    nb.EntryMenu(frame, textvariable=this.prefs_color_pad).grid(row=22, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
+    nb.Button(frame, text='Pick', command=lambda: pick_into(frame, this.prefs_color_pad)).grid(row=22, column=3, padx=PADX, pady=PADY, sticky=tk.E)
 
-    nb.Label(frame, text='Screen').grid(row=23, padx=2*PADX, sticky=tk.W)
-    nb.Label(frame, text='Width').grid(row=23, column=1, padx=PADX, sticky=tk.E)
-    nb.EntryMenu(frame, textvariable=this.prefs_screen_w).grid(row=23, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
-    nb.Label(frame, text='Height').grid(row=24, column=1, padx=PADX, sticky=tk.E)
-    nb.EntryMenu(frame, textvariable=this.prefs_screen_h).grid(row=24, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
+    nb.Label(frame, text='Center coordinates').grid(row=23, padx=2*PADX, sticky=tk.W)
+    nb.Label(frame, text='X').grid(row=23, column=1, padx=PADX, sticky=tk.E)
+    nb.EntryMenu(frame, textvariable=this.prefs_center_x).grid(row=23, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
+    nb.Label(frame, text='Y').grid(row=24, column=1, padx=PADX, sticky=tk.E)
+    nb.EntryMenu(frame, textvariable=this.prefs_center_y).grid(row=24, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
 
-    nb.Label(frame, text='Drawing delay').grid(row=31, padx=2*PADX, sticky=tk.W)
-    nb.Label(frame, text='msec').grid(row=31, column=1, padx=PADX, sticky=tk.E)
-    nb.EntryMenu(frame, textvariable=this.prefs_ms_delay).grid(row=31, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
+    nb.Label(frame, text='Screen').grid(row=25, padx=2*PADX, sticky=tk.W)
+    nb.Label(frame, text='Width').grid(row=25, column=1, padx=PADX, sticky=tk.E)
+    nb.EntryMenu(frame, textvariable=this.prefs_screen_w).grid(row=25, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
+    nb.Label(frame, text='Height').grid(row=26, column=1, padx=PADX, sticky=tk.E)
+    nb.EntryMenu(frame, textvariable=this.prefs_screen_h).grid(row=26, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
+
+    nb.Label(frame, text='Drawing delay').grid(row=27, padx=2*PADX, sticky=tk.W)
+    nb.Label(frame, text='msec').grid(row=27, column=1, padx=PADX, sticky=tk.E)
+    nb.EntryMenu(frame, textvariable=this.prefs_ms_delay).grid(row=27, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
 
     return frame
 
@@ -385,6 +429,20 @@ def prefs_changed(cmdr, is_beta):
     this.over_ms_delay = this.prefs_ms_delay.get()
     config.set(PREFSNAME_MS_DELAY, str(this.over_ms_delay))
 
+    # overlay colors (validate; revert to last valid value on bad input)
+    parent = this.dummy.master
+    color_stn = this.prefs_color_stn.get().strip()
+    if not is_valid_color(parent, color_stn):
+        color_stn = this.over_color_stn
+        this.prefs_color_stn.set(color_stn)
+    color_pad = this.prefs_color_pad.get().strip()
+    if not is_valid_color(parent, color_pad):
+        color_pad = this.over_color_pad
+        this.prefs_color_pad.set(color_pad)
+    this.over_color_stn = color_stn
+    this.over_color_pad = color_pad
+    config.set(PREFSNAME_COL_OVERLAY, f"{this.over_color_stn}:{this.over_color_pad}")
+
     # update station
     width = this.dummy.master.winfo_width()
     this.starport_canvas.config(col_stn=this.col_stn, col_pad=this.col_pad, backward=this.backward, width=width)
@@ -397,11 +455,13 @@ def prefs_changed(cmdr, is_beta):
         overlay=this.overlay, backward=this.backward, radius=this.over_radius,
         center_x=this.over_center_x, center_y=this.over_center_y,
         screen_w=float(sw), screen_h=float(sh), ms_delay=this.over_ms_delay,
+        color_stn=this.over_color_stn, color_pad=this.over_color_pad,
     )
     this.fleetcarrier_overlay.config(
         overlay=this.overlay, backward=this.backward, radius=this.over_radius,
         center_x=this.over_center_x, center_y=this.over_center_y,
         screen_w=float(sw), screen_h=float(sh), ms_delay=this.over_ms_delay,
+        color_stn=this.over_color_stn, color_pad=this.over_color_pad,
     )
 
 # ED Bug: these ships are reported as 'SurfaceStation'

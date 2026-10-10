@@ -273,7 +273,7 @@ class FleetCarrierPadsOverlay():
         msg = {
             "id": f"{self.id_prefix}pad-{pad}",
             "shape": "rect",
-            "color": self.color_pad,
+            "color": self.color_stn,
             "fill": self.color_pad,
             "ttl": self.ttl,
             "x": x, "y": y,
