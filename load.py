@@ -234,7 +234,7 @@ def get_overlay_prefs(parent):
     this.prefs_ms_delay = tk.IntVar(value=this.over_ms_delay)
     this.prefs_color_stn = tk.StringVar(value=this.over_color_stn)
     this.prefs_color_pad = tk.StringVar(value=this.over_color_pad)
-    
+
 def try_overlay():
     # test for EDMC Overlay
     if this.use_overlay and this.overlay is None:
@@ -360,13 +360,25 @@ def plugin_prefs(parent, cmdr, is_beta):
     nb.Label(frame, text='Radius').grid(row=20, column=1, padx=PADX, sticky=tk.E)
     nb.EntryMenu(frame, textvariable=this.prefs_radius).grid(row=20, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
     nb.Label(frame, text='Color').grid(row=21, column=1, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
-    nb.EntryMenu(frame, textvariable=this.prefs_color_stn).grid(row=21, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
-    nb.Button(frame, text='Pick', command=lambda: pick_into(frame, this.prefs_color_stn)).grid(row=21, column=3, padx=PADX, pady=PADY, sticky=tk.E)
+    group_frame = nb.Frame(frame)
+    group_frame.columnconfigure(0, weight=1)
+    nb.EntryMenu(group_frame, textvariable=this.prefs_color_stn).grid(row=0, column=0, padx=PADX, pady=PADY, sticky=tk.EW)
+    nb.Button(
+        group_frame, text='Select...',
+        command=lambda: pick_into(group_frame, this.prefs_color_stn)
+    ).grid(row=0, column=1, padx=PADX, pady=PADY, sticky=tk.E)
+    group_frame.grid(row=21, column=2, sticky=tk.EW)
 
     nb.Label(frame, text='Pad').grid(row=22, padx=2*PADX, sticky=tk.W)
     nb.Label(frame, text='Color').grid(row=22, column=1, padx=2*PADX, pady=(PADX, 0), sticky=tk.W)
-    nb.EntryMenu(frame, textvariable=this.prefs_color_pad).grid(row=22, column=2, padx=PADX, pady=PADY, sticky=tk.EW)
-    nb.Button(frame, text='Pick', command=lambda: pick_into(frame, this.prefs_color_pad)).grid(row=22, column=3, padx=PADX, pady=PADY, sticky=tk.E)
+    group_frame = nb.Frame(frame)
+    group_frame.columnconfigure(0, weight=1)
+    nb.EntryMenu(group_frame, textvariable=this.prefs_color_pad).grid(row=0, column=0, padx=PADX, pady=PADY, sticky=tk.EW)
+    nb.Button(
+        group_frame, text='Select...',
+        command=lambda: pick_into(group_frame, this.prefs_color_pad)
+    ).grid(row=0, column=1, padx=PADX, pady=PADY, sticky=tk.E)
+    group_frame.grid(row=22, column=2, sticky=tk.EW)
 
     nb.Label(frame, text='Center coordinates').grid(row=23, padx=2*PADX, sticky=tk.W)
     nb.Label(frame, text='X').grid(row=23, column=1, padx=PADX, sticky=tk.E)
