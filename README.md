@@ -33,6 +33,8 @@ You will need to re-start EDMC for it to notice the new plugin.
 * Overlay
   - Use overlay if available: if the EDMCOverlay plugin is installed use it (Default: off)
   - Station Radius: the radius of the overlay station (Default: 100)
+  - Station Colour: the colour for the station outline (Default: #ffffff)
+  - Pad Colour: the colour for the assigned landingpad (Default: yellow)
   - Center coordinates X/Y: the center position of the overlay station (Default: 100/490)
   - Screen Width/Height: the gamescreen resolution to keep the right aspect ratio (Default: screen of EDMC)
   - Drawing delay: delay between each drawing step in milliseconds (allowed range: 0 .. 500, Default: 100)
@@ -44,9 +46,10 @@ You will need to re-start EDMC for it to notice the new plugin.
 ## Acknowledgements
 
 [Habitable Zone plugin](https://github.com/Marginal/HabZone) from Jonathan Harris used as template.
+Thanks to @itewk for adding the station/pad colour setting to the gui.
 
 ## License
 
-Copyright © 2018 Bernd Gollesch.
+Copyright © 2018-2026 Bernd Gollesch.
 
 Licensed under the [GNU Public License (GPL)](http://www.gnu.org/licenses/gpl-2.0.html) version 2 or later.
