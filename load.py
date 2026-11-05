@@ -22,7 +22,7 @@ from lpads import (
 PLUGIN_NAME = os.path.basename(os.path.dirname(__file__))
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
-__version_info__ = (2, 6, 0)
+__version_info__ = (2, 6, 1)
 __version__ = ".".join(map(str, __version_info__))
 
 PLUGIN_URL = 'https://github.com/bgol/LandingPad'
@@ -70,8 +70,22 @@ class This():
 
     # other used globals
     curr_show: bool = None
-    hide_events: set[str] = {'Docked', 'DockingCancelled', 'DockingTimeout', 'StartJump', 'Shutdown'}
-    starport_types: set[str] = {'bernal', 'coriolis', 'orbis', 'asteroidbase', 'ocellus', 'dodec'}
+    hide_events: set[str] = {
+        'Docked',
+        'DockingCancelled',
+        'DockingDenied',
+        'DockingTimeout',
+        'Shutdown',
+        'StartJump',
+    }
+    starport_types: set[str] = {
+        'asteroidbase',
+        'bernal',
+        'coriolis',
+        'dodec',
+        'ocellus',
+        'orbis',
+    }
     fleetcarrier_types: set[str] = {'fleetcarrier', COLONISATIONSHIP_TYP_NAME}
     curr_station_type: str | None = None
     TYPE_STARPORT: str = "starport"
